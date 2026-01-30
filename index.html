@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PetMatch - Encontre seu novo melhor amigo</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div id="root">
+        <!-- Aplicação será renderizada aqui -->
+    </div>
+    
+    <!-- Modal para detalhes do pet -->
+    <div id="pet-modal" class="modal" aria-hidden="true">
+        <div class="modal-content">
+            <button class="modal-close" aria-label="Fechar modal">
+                <i class="fas fa-times"></i>
+            </button>
+            <div id="pet-modal-body"></div>
+        </div>
+    </div>
+    
+    <!-- Modal de filtros -->
+    <div id="filter-modal" class="modal" aria-hidden="true">
+        <div class="modal-content filter-modal">
+            <button class="modal-close" aria-label="Fechar modal">
+                <i class="fas fa-times"></i>
+            </button>
+            <div id="filter-modal-body"></div>
+        </div>
+    </div>
+    
+    <!-- Modal de contato -->
+    <div id="contact-modal" class="modal" aria-hidden="true">
+        <div class="modal-content contact-modal">
+            <button class="modal-close" aria-label="Fechar modal">
+                <i class="fas fa-times"></i>
+            </button>
+            <div id="contact-modal-body"></div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="data.json"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,220 @@
+{
+  "pets": [
+    {
+      "id": 1,
+      "nome": "Pipoca",
+      "cep": "01000",
+      "cidade": "São Paulo",
+      "deficiencia": "Cega",
+      "ong": "ONG Patinhas",
+      "imagem": "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=400&auto=format&fit=crop",
+      "idade": "3 anos",
+      "porte": "Pequeno",
+      "tipo": "Cachorro",
+      "descricao": "Pipoca é uma cachorrinha muito carinhosa e adaptada à sua condição. Ela se orienta muito bem pelo olfato e audição.",
+      "genero": "Fêmea"
+    },
+    {
+      "id": 2,
+      "nome": "Bento",
+      "cep": "06000",
+      "cidade": "Osasco",
+      "deficiencia": "Tripé",
+      "ong": "Resgate Animal",
+      "imagem": "https://images.unsplash.com/photo-1537151608828-ea2b11777ee8?w=400&auto=format&fit=crop",
+      "idade": "2 anos",
+      "porte": "Médio",
+      "tipo": "Cachorro",
+      "descricao": "Bento perdeu uma das patinhas em um acidente, mas isso não o impede de ser brincalhão e cheio de energia.",
+      "genero": "Macho"
+    },
+    {
+      "id": 3,
+      "nome": "Luz",
+      "cep": "01000",
+      "cidade": "São Paulo",
+      "deficiencia": "Surda",
+      "ong": "Anjos de Patas",
+      "imagem": "https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?w=400&auto=format&fit=crop",
+      "idade": "4 anos",
+      "porte": "Pequeno",
+      "tipo": "Cachorro",
+      "descricao": "Luz é uma cachorrinha muito tranquila que se comunica através de gestos e toques. Ideal para apartamento.",
+      "genero": "Fêmea"
+    },
+    {
+      "id": 4,
+      "nome": "Thor",
+      "cep": "02000",
+      "cidade": "São Paulo",
+      "deficiencia": "Paraplegia",
+      "ong": "Amigos dos Animais",
+      "imagem": "https://images.unsplash.com/photo-1514888286974-6d03bdeacba8?w=400&auto=format&fit=crop",
+      "idade": "5 anos",
+      "porte": "Grande",
+      "tipo": "Cachorro",
+      "descricao": "Thor usa uma cadeirinha de rodas e é muito sociável. Adora passeios e brincar com outros cães.",
+      "genero": "Macho"
+    },
+    {
+      "id": 5,
+      "nome": "Luna",
+      "cep": "03000",
+      "cidade": "São Paulo",
+      "deficiencia": "Cega",
+      "ong": "Casa do Gato",
+      "imagem": "https://images.unsplash.com/photo-1513360371669-4adf3dd7dff8?w=400&auto=format&fit=crop",
+      "idade": "2 anos",
+      "porte": "Pequeno",
+      "tipo": "Gato",
+      "descricao": "Luna é uma gatinha muito doce que se adaptou perfeitamente à falta de visão. Perfeita para famílias calmas.",
+      "genero": "Fêmea"
+    },
+    {
+      "id": 6,
+      "nome": "Max",
+      "cep": "06000",
+      "cidade": "Osasco",
+      "deficiencia": "Ausência de uma pata",
+      "ong": "Resgate Animal",
+      "imagem": "https://images.unsplash.com/photo-1552053831-71594a27632d?w=400&auto=format&fit=crop",
+      "idade": "1 ano",
+      "porte": "Médio",
+      "tipo": "Cachorro",
+      "descricao": "Max é um filhote muito energético que perdeu uma pata mas não perdeu a alegria de viver.",
+      "genero": "Macho"
+    },
+    {
+      "id": 7,
+      "nome": "Mel",
+      "cep": "04000",
+      "cidade": "São Paulo",
+      "deficiencia": "Surda e Cega",
+      "ong": "ONG Patinhas",
+      "imagem": "https://images.unsplash.com/photo-1592194996308-7b43878e84a6?w=400&auto=format&fit=crop",
+      "idade": "6 anos",
+      "porte": "Pequeno",
+      "tipo": "Cachorro",
+      "descricao": "Mel é uma cachorrinha especial que precisa de cuidados especiais mas retribui com muito amor.",
+      "genero": "Fêmea"
+    },
+    {
+      "id": 8,
+      "nome": "Bolinha",
+      "cep": "05000",
+      "cidade": "São Paulo",
+      "deficiencia": "Paralisia parcial",
+      "ong": "Anjos de Patas",
+      "imagem": "https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=400&auto=format&fit=crop",
+      "idade": "3 anos",
+      "porte": "Médio",
+      "tipo": "Cachorro",
+      "descricao": "Bolinha tem uma paralisia parcial nas patas traseiras mas se locomove bem com ajuda de uma cadeirinha.",
+      "genero": "Macho"
+    },
+    {
+      "id": 9,
+      "nome": "Nina",
+      "cep": "01000",
+      "cidade": "São Paulo",
+      "deficiencia": "Cega",
+      "ong": "Amigos dos Animais",
+      "imagem": "https://images.unsplash.com/photo-1543852786-1cf6624b9987?w=400&auto=format&fit=crop",
+      "idade": "4 anos",
+      "porte": "Pequeno",
+      "tipo": "Gato",
+      "descricao": "Nina é uma gatinha cega muito independente. Ideal para quem busca um companheiro tranquilo.",
+      "genero": "Fêmea"
+    },
+    {
+      "id": 10,
+      "nome": "Rex",
+      "cep": "02000",
+      "cidade": "São Paulo",
+      "deficiencia": "Tripé",
+      "ong": "Casa do Gato",
+      "imagem": "https://images.unsplash.com/photo-1552053831-71594a27632d?w=400&auto=format&fit=crop",
+      "idade": "2 anos",
+      "porte": "Grande",
+      "tipo": "Cachorro",
+      "descricao": "Rex é um cachorro grande e muito amigável que perdeu uma pata mas não perdeu a disposição.",
+      "genero": "Macho"
+    }
+  ],
+  "ongs": [
+    {
+      "id": 1,
+      "nome": "Instituto Luisa Mell",
+      "endereco": "Avenida Paulista, 1000",
+      "distance": "2.5km",
+      "nota": 5,
+      "cidade": "São Paulo",
+      "telefone": "(11) 9999-9999",
+      "email": "contato@ilm.org",
+      "lat": -23.563,
+      "lng": -46.654
+    },
+    {
+      "id": 2,
+      "nome": "ONG Patinhas Carentes",
+      "endereco": "Rua das Flores, 50",
+      "distance": "4.8km",
+      "nota": 4.8,
+      "cidade": "São Paulo",
+      "telefone": "(11) 9888-8888",
+      "email": "patinhas@ong.org",
+      "lat": -23.550,
+      "lng": -46.633
+    },
+    {
+      "id": 3,
+      "nome": "Resgate Animal",
+      "endereco": "Rua dos Animais, 123",
+      "distance": "3.2km",
+      "nota": 4.9,
+      "cidade": "Osasco",
+      "telefone": "(11) 9777-7777",
+      "email": "resgate@animal.org",
+      "lat": -23.532,
+      "lng": -46.792
+    },
+    {
+      "id": 4,
+      "nome": "Anjos de Patas",
+      "endereco": "Alameda Santos, 456",
+      "distance": "5.1km",
+      "nota": 4.7,
+      "cidade": "São Paulo",
+      "telefone": "(11) 9666-6666",
+      "email": "anjos@patas.org",
+      "lat": -23.567,
+      "lng": -46.645
+    },
+    {
+      "id": 5,
+      "nome": "Amigos dos Animais",
+      "endereco": "Rua da Esperança, 789",
+      "distance": "6.3km",
+      "nota": 4.6,
+      "cidade": "São Paulo",
+      "telefone": "(11) 9555-5555",
+      "email": "amigos@animais.org",
+      "lat": -23.578,
+      "lng": -46.642
+    }
+  ],
+  "fundadores": [
+    {
+      "nome": "Kawany",
+      "cargo": "Desenvolvedora & Idealizadora"
+    },
+    {
+      "nome": "Membro 2",
+      "cargo": "Co-fundador"
+    },
+    {
+      "nome": "Membro 3",
+      "cargo": "Co-fundador"
+    }
+  ]
+}
