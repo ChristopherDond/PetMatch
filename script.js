@@ -652,14 +652,14 @@ class PetMatchApp {
                     </div>
                     
                     <div class="footer-section">
-                        <h3>Contato</h3>
-                        <ul class="footer-links">
-                            <li><a href="mailto:contato@petmatch.org"><i class="fas fa-envelope"></i> contato@petmatch.org</a></li>
-                            <li><a href="tel:+5511999999999"><i class="fas fa-phone"></i> (11) 99999-9999</a></li>
-                            <li><i class="fas fa-map-marker-alt"></i> Taboão da Serra, SP</li>
-                        </ul>
-                    </div>
-                </div>
+    <h3>Contato</h3>
+    <ul class="footer-links">
+        <li><a href="mailto:contatopetmatch@gmail.com"><i class="fas fa-envelope"></i> contatopetmatch@gmail.com</a></li>
+        <li><a href="https://wa.me/5511999647524" target="_blank"><i class="fab fa-whatsapp"></i> (11) 99964-7524</a></li>
+        <li><a href="https://www.instagram.com/petmatch90" target="_blank"><i class="fab fa-instagram"></i> @petmatch90</a></li>
+        <li><i class="fas fa-map-marker-alt"></i> Taboão da Serra, SP</li>
+    </ul>
+</div>
                 
                 <div class="footer-bottom">
                     <p>&copy; ${new Date().getFullYear()} PetMatch. Todos os direitos reservados.</p>

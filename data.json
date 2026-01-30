@@ -203,18 +203,30 @@
       "lng": -46.642
     }
   ],
-  "fundadores": [
+  "equipe": [
     {
-      "nome": "Kawany",
-      "cargo": "Desenvolvedora & Idealizadora"
-    },
-    {
-      "nome": "Julia",
-      "cargo": "Co-fundador"
+      "nome": "Ana Julia",
+      "cargo": "Membro"
     },
     {
       "nome": "Ana Clara",
-      "cargo": "Co-fundador"
+      "cargo": "Membro"
+    },
+    {
+      "nome": "Kaique Silva",
+      "cargo": "Membro"
+    },
+    {
+      "nome": "Kawany Barreto",
+      "cargo": "Membro"
+    },
+    {
+      "nome": "Julia Barreto",
+      "cargo": "Membro"
+    },
+    {
+      "nome": "Pedro Arantes",
+      "cargo": "Membro"
     }
   ]
 }
