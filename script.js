@@ -656,7 +656,7 @@ class PetMatchApp {
                         <ul class="footer-links">
                             <li><a href="mailto:contato@petmatch.org"><i class="fas fa-envelope"></i> contato@petmatch.org</a></li>
                             <li><a href="tel:+5511999999999"><i class="fas fa-phone"></i> (11) 99999-9999</a></li>
-                            <li><i class="fas fa-map-marker-alt"></i> São Paulo, SP</li>
+                            <li><i class="fas fa-map-marker-alt"></i> Taboão da Serra, SP</li>
                         </ul>
                     </div>
                 </div>
