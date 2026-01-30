@@ -203,7 +203,7 @@
       "lng": -46.642
     }
   ],
-  "equipe": [
+   "equipe": [
     {
       "nome": "Ana Julia",
       "cargo": "Participante"
@@ -226,6 +226,10 @@
     },
     {
       "nome": "Pedro Arantes",
+      "cargo": "Participante"
+    },
+    {
+      "nome": "Geovanna Andrade",
       "cargo": "Participante"
     }
   ]
