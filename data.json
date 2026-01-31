@@ -25,133 +25,105 @@
       "idade": "2 anos",
       "porte": "Médio",
       "tipo": "Cachorro",
-      "descricao": "Bento perdeu uma das patinhas em um acidente, mas isso não o impede de ser brincalhão e cheio de energia.",
+      "descricao": "Bento perdeu uma patinha em um acidente, mas isso não o impede de correr e brincar como qualquer outro cachorro.",
       "genero": "Macho"
     },
     {
       "id": 3,
-      "nome": "Luz",
+      "nome": "Luna",
       "cep": "01000",
       "cidade": "São Paulo",
       "deficiencia": "Surda",
-      "ong": "Anjos de Patas",
+      "ong": "ONG Patinhas",
       "imagem": "https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?w=400&auto=format&fit=crop",
-      "idade": "4 anos",
-      "porte": "Pequeno",
+      "idade": "1 ano",
+      "porte": "Médio",
       "tipo": "Cachorro",
-      "descricao": "Luz é uma cachorrinha muito tranquila que se comunica através de gestos e toques. Ideal para apartamento.",
+      "descricao": "Luna é uma cadelinha dócil que aprendeu comandos por sinais. Ela é extremamente atenta visualmente.",
       "genero": "Fêmea"
     },
     {
       "id": 4,
-      "nome": "Thor",
-      "cep": "02000",
+      "nome": "Frederico",
+      "cep": "01000",
       "cidade": "São Paulo",
-      "deficiencia": "Paraplegia",
-      "ong": "Amigos dos Animais",
-      "imagem": "https://images.unsplash.com/photo-1514888286974-6d03bdeacba8?w=400&auto=format&fit=crop",
-      "idade": "5 anos",
+      "deficiencia": "Cadeirante",
+      "ong": "Anjos de Patas",
+      "imagem": "https://images.unsplash.com/photo-1598133894008-61f7fdb8cc3a?w=400&auto=format&fit=crop",
+      "idade": "4 anos",
       "porte": "Grande",
       "tipo": "Cachorro",
-      "descricao": "Thor usa uma cadeirinha de rodas e é muito sociável. Adora passeios e brincar com outros cães.",
+      "descricao": "Frederico usa sua cadeirinha de rodas com muita maestria e adora passear no parque.",
       "genero": "Macho"
     },
     {
       "id": 5,
-      "nome": "Luna",
-      "cep": "03000",
-      "cidade": "São Paulo",
-      "deficiencia": "Cega",
-      "ong": "Casa do Gato",
-      "imagem": "https://images.unsplash.com/photo-1513360371669-4adf3dd7dff8?w=400&auto=format&fit=crop",
-      "idade": "2 anos",
-      "porte": "Pequeno",
-      "tipo": "Gato",
-      "descricao": "Luna é uma gatinha muito doce que se adaptou perfeitamente à falta de visão. Perfeita para famílias calmas.",
-      "genero": "Fêmea"
+      "nome": "Thor",
+      "cep": "06000",
+      "cidade": "Osasco",
+      "deficiencia": "Monocular",
+      "ong": "Resgate Animal",
+      "imagem": "https://images.unsplash.com/photo-1552053831-71594a27632d?w=400&auto=format&fit=crop",
+      "idade": "5 anos",
+      "porte": "Grande",
+      "tipo": "Cachorro",
+      "descricao": "Thor perdeu a visão de um dos olhos, mas seu instinto de proteção e carinho continuam intactos.",
+      "genero": "Macho"
     },
     {
       "id": 6,
-      "nome": "Max",
-      "cep": "06000",
-      "cidade": "Osasco",
-      "deficiencia": "Ausência de uma pata",
-      "ong": "Resgate Animal",
-      "imagem": "https://images.unsplash.com/photo-1552053831-71594a27632d?w=400&auto=format&fit=crop",
-      "idade": "1 ano",
-      "porte": "Médio",
+      "nome": "Mel",
+      "cep": "01000",
+      "cidade": "São Paulo",
+      "deficiencia": "Paralisia Parcial",
+      "ong": "ONG Patinhas",
+      "imagem": "https://images.unsplash.com/photo-1517849845537-4d257902454a?w=400&auto=format&fit=crop",
+      "idade": "2 anos",
+      "porte": "Pequeno",
       "tipo": "Cachorro",
-      "descricao": "Max é um filhote muito energético que perdeu uma pata mas não perdeu a alegria de viver.",
-      "genero": "Macho"
+      "descricao": "Mel é uma cachorrinha resiliente que faz fisioterapia e adora um colo quentinho.",
+      "genero": "Fêmea"
     },
     {
       "id": 7,
-      "nome": "Mel",
-      "cep": "04000",
+      "nome": "Oscar",
+      "cep": "01000",
       "cidade": "São Paulo",
-      "deficiencia": "Surda e Cega",
-      "ong": "ONG Patinhas",
-      "imagem": "https://images.unsplash.com/photo-1592194996308-7b43878e84a6?w=400&auto=format&fit=crop",
-      "idade": "6 anos",
-      "porte": "Pequeno",
-      "tipo": "Cachorro",
-      "descricao": "Mel é uma cachorrinha especial que precisa de cuidados especiais mas retribui com muito amor.",
-      "genero": "Fêmea"
-    },
-    {
-      "id": 8,
-      "nome": "Bolinha",
-      "cep": "05000",
-      "cidade": "São Paulo",
-      "deficiencia": "Paralisia parcial",
+      "deficiencia": "Amputado",
       "ong": "Anjos de Patas",
-      "imagem": "https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=400&auto=format&fit=crop",
+      "imagem": "https://images.unsplash.com/photo-1534361960057-19889db9621e?w=400&auto=format&fit=crop",
       "idade": "3 anos",
       "porte": "Médio",
       "tipo": "Cachorro",
-      "descricao": "Bolinha tem uma paralisia parcial nas patas traseiras mas se locomove bem com ajuda de uma cadeirinha.",
+      "descricao": "Oscar é a alegria em forma de cão. Sua falta de uma pata traseira não tira sua velocidade nas brincadeiras.",
       "genero": "Macho"
     },
     {
-      "id": 9,
+      "id": 8,
       "nome": "Nina",
-      "cep": "01000",
-      "cidade": "São Paulo",
+      "cep": "06000",
+      "cidade": "Osasco",
       "deficiencia": "Cega",
-      "ong": "Amigos dos Animais",
-      "imagem": "https://images.unsplash.com/photo-1543852786-1cf6624b9987?w=400&auto=format&fit=crop",
-      "idade": "4 anos",
+      "ong": "Resgate Animal",
+      "imagem": "https://images.unsplash.com/photo-1530281700549-e82e7bf110d6?w=400&auto=format&fit=crop",
+      "idade": "1 ano",
       "porte": "Pequeno",
-      "tipo": "Gato",
-      "descricao": "Nina é uma gatinha cega muito independente. Ideal para quem busca um companheiro tranquilo.",
-      "genero": "Fêmea"
-    },
-    {
-      "id": 10,
-      "nome": "Rex",
-      "cep": "02000",
-      "cidade": "São Paulo",
-      "deficiencia": "Tripé",
-      "ong": "Casa do Gato",
-      "imagem": "https://images.unsplash.com/photo-1552053831-71594a27632d?w=400&auto=format&fit=crop",
-      "idade": "2 anos",
-      "porte": "Grande",
       "tipo": "Cachorro",
-      "descricao": "Rex é um cachorro grande e muito amigável que perdeu uma pata mas não perdeu a disposição.",
-      "genero": "Macho"
+      "descricao": "Nina é uma cachorrinha corajosa que explora o mundo com seu focinho e adora brinquedos sonoros.",
+      "genero": "Fêmea"
     }
   ],
   "ongs": [
     {
       "id": 1,
-      "nome": "Instituto Luisa Mell",
-      "endereco": "Avenida Paulista, 1000",
+      "nome": "ONG Patinhas",
+      "endereco": "Av. Paulista, 1000",
       "distance": "2.5km",
-      "nota": 5,
+      "nota": 4.9,
       "cidade": "São Paulo",
       "telefone": "(11) 9999-9999",
-      "email": "contato@ilm.org",
-      "lat": -23.563,
+      "email": "contato@patinhas.org",
+      "lat": -23.561,
       "lng": -46.654
     },
     {
@@ -186,51 +158,32 @@
       "nota": 4.7,
       "cidade": "São Paulo",
       "telefone": "(11) 9666-6666",
-      "email": "anjos@patas.org",
-      "lat": -23.567,
-      "lng": -46.645
-    },
-    {
-      "id": 5,
-      "nome": "Amigos dos Animais",
-      "endereco": "Rua da Esperança, 789",
-      "distance": "6.3km",
-      "nota": 4.6,
-      "cidade": "São Paulo",
-      "telefone": "(11) 9555-5555",
-      "email": "amigos@animais.org",
-      "lat": -23.578,
-      "lng": -46.642
+      "email": "contato@anjosdepatas.org",
+      "lat": -23.564,
+      "lng": -46.652
     }
   ],
-   "equipe": [
+  "fundadores": [
     {
-      "nome": "Ana Julia",
-      "cargo": "Participante"
+      "id": 1,
+      "nome": "Ana Silva",
+      "cargo": "Fundadora & Veterinária",
+      "bio": "Apaixonada por animais desde criança, Ana fundou o PetMatch para dar visibilidade a pets com deficiência.",
+      "imagem": "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&auto=format&fit=crop"
     },
     {
-      "nome": "Ana Clara",
-      "cargo": "Participante"
+      "id": 2,
+      "nome": "Ricardo Santos",
+      "cargo": "Co-fundador & Diretor de Resgate",
+      "bio": "Com mais de 10 anos de experiência em ONGs, Ricardo foca na logística de resgate e reabilitação.",
+      "imagem": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&auto=format&fit=crop"
     },
     {
-      "nome": "Kaique Silva",
-      "cargo": "Participante"
-    },
-    {
-      "nome": "Kawany Barreto",
-      "cargo": "Participante"
-    },
-    {
-      "nome": "Julia Barreto",
-      "cargo": "Participante"
-    },
-    {
-      "nome": "Pedro Arantes",
-      "cargo": "Participante"
-    },
-    {
-      "nome": "Geovanna Andrade",
-      "cargo": "Participante"
+      "id": 3,
+      "nome": "Mariana Costa",
+      "cargo": "Diretora de Comunicação",
+      "bio": "Mariana utiliza o marketing para contar as histórias emocionantes de superação dos nossos pets.",
+      "imagem": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&auto=format&fit=crop"
     }
   ]
 }

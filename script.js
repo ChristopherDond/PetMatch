@@ -163,11 +163,11 @@ class PetMatchApp {
 
         document.addEventListener('input', (e) => {
             if (e.target.id === 'cep-input') {
-                this.setState({ cep: e.target.value });
-            }
-            if (e.target.id === 'cidade-input') {
-                this.setState({ cidade: e.target.value });
-            }
+        this.state.cep = e.target.value; // Atribuição direta sem render()
+    }
+    if (e.target.id === 'cidade-input') {
+        this.state.cidade = e.target.value; // Atribuição direta sem render()
+    }
             if (e.target.id === 'filter-deficiencia') {
                 this.setState({ filters: { ...this.state.filters, deficiencia: e.target.value } });
             }
@@ -252,32 +252,7 @@ class PetMatchApp {
         localStorage.setItem('petmatch_recently_viewed', JSON.stringify(recentlyViewed));
     }
 
-    filterPets() {
-        const { cep, cidade } = this.state;
-        let filteredPets = APP_DATA.pets;
-        
-        // Filtrar por CEP (primeiros dígitos)
-        if (cep) {
-            if (cep.startsWith('01') || cep.startsWith('02') || cep.startsWith('03') || 
-                cep.startsWith('04') || cep.startsWith('05')) {
-                filteredPets = filteredPets.filter(p => p.cidade === "São Paulo");
-            } else if (cep.startsWith('06')) {
-                filteredPets = filteredPets.filter(p => p.cidade === "Osasco");
-            }
-        }
-        
-        // Filtrar por cidade
-        if (cidade) {
-            filteredPets = filteredPets.filter(p => 
-                p.cidade.toLowerCase().includes(cidade.toLowerCase())
-            );
-        }
-        
-        this.setState({ 
-            filteredPets,
-            currentPage: 1 
-        });
-    }
+    
 
     applyFilters() {
         const { filters } = this.state;
@@ -539,13 +514,43 @@ class PetMatchApp {
         });
     }
 
+    filterPets() {
+        const { cep, cidade } = this.state;
+        let filteredPets = APP_DATA.pets;
+
+        // Filtro por CEP
+        if (cep && cep.length >= 2) {
+            const prefix = cep.substring(0, 2);
+            if (['01', '02', '03', '04', '05'].includes(prefix)) {
+                filteredPets = filteredPets.filter(
+                    p => p.cidade.toLowerCase() === 'são paulo'
+                );
+            } else if (prefix === '06') {
+                filteredPets = filteredPets.filter(
+                    p => p.cidade.toLowerCase() === 'osasco'
+                );
+            }
+        }
+
+        // Filtro por cidade
+        if (cidade) {
+            filteredPets = filteredPets.filter(p =>
+                p.cidade.toLowerCase().includes(cidade.toLowerCase())
+            );
+        }
+
+        // Atualiza o estado e renderiza a lista filtrada
+        this.setState({ 
+            filteredPets,
+            currentPage: 1 
+        });
+    }
     render() {
         const root = document.getElementById('root');
         const isAuthPage = this.currentPath === '/';
-        
-        // Aplicar tema escuro
+
         document.body.classList.toggle('dark-mode', this.state.darkMode);
-        
+
         root.innerHTML = `
             <div class="app-container ${isAuthPage ? 'auth-page' : ''}">
                 ${this.renderHeader()}
@@ -555,12 +560,62 @@ class PetMatchApp {
                 ${!isAuthPage ? this.renderFooter() : ''}
             </div>
         `;
-        
-        // Inicializar mapa se necessário
+
+        // Re-vincula eventos específicos da página após o innerHTML
+        if (this.currentPath === '/adotar') {
+            this.bindAdotarFilters();
+        }
+
         if (this.currentPath === '/locais' && !this.state.isLoading) {
             setTimeout(() => this.initMap(), 100);
         }
     }
+
+bindAdotarFilters() {
+        const cepInput = document.getElementById('cep-input');
+        const cidadeInput = document.getElementById('cidade-input');
+        const searchBtn = document.getElementById('search-pets');
+        const clearBtn = document.getElementById('clear-filters');
+
+        if (cepInput) {
+            // Atualiza apenas o dado no estado, sem chamar render() para não perder o foco
+            cepInput.addEventListener('input', (e) => {
+                this.state.cep = e.target.value;
+            });
+        }
+
+        if (cidadeInput) {
+            cidadeInput.addEventListener('input', (e) => {
+                this.state.cidade = e.target.value;
+            });
+        }
+
+        if (searchBtn) {
+            searchBtn.addEventListener('click', () => {
+                this.filterPets(); // O render() acontece aqui ao processar o filtro
+            });
+        }
+
+        if (clearBtn) {
+            clearBtn.addEventListener('click', () => {
+                this.setState({ 
+                    cep: '',
+                    cidade: '',
+                    filteredPets: APP_DATA.pets,
+                    currentPage: 1
+                });
+            });
+        }
+    }
+
+
+
+
+updateList() {
+    const content = document.getElementById('dynamic-content');
+    if (!content) return;
+    content.innerHTML = this.renderContent();
+}
 
     renderLoading() {
         return `
@@ -619,55 +674,55 @@ class PetMatchApp {
     }
 
     renderFooter() {
-        return `
-            <footer class="app-footer">
-                <div class="footer-content">
-                    <div class="footer-section">
-                        <h3>PetMatch</h3>
-                        <p>Conectando pets com deficiência a lares amorosos desde 2024.</p>
-                        <div class="social-icons">
-                            <a href="#" class="social-icon" aria-label="Facebook">
-                                <i class="fab fa-facebook-f"></i>
-                            </a>
-                            <a href="#" class="social-icon" aria-label="Instagram">
-                                <i class="fab fa-instagram"></i>
-                            </a>
-                            <a href="#" class="social-icon" aria-label="Twitter">
-                                <i class="fab fa-twitter"></i>
-                            </a>
-                            <a href="#" class="social-icon" aria-label="WhatsApp">
-                                <i class="fab fa-whatsapp"></i>
-                            </a>
-                        </div>
+    return `
+        <footer class="app-footer">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>PetMatch</h3>
+                    <p>Conectando pets com deficiência a lares amorosos desde 2024.</p>
+                    <div class="social-icons">
+                        <a href="#" class="social-icon" aria-label="Facebook">
+                            <i class="fab fa-facebook-f"></i>
+                        </a>
+                        <a href="https://www.instagram.com/petmatch90" target="_blank" rel="noopener noreferrer" class="social-icon" aria-label="Instagram">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                        <a href="#" class="social-icon" aria-label="Twitter">
+                            <i class="fab fa-twitter"></i>
+                        </a>
+                        <a href="#" class="social-icon" aria-label="WhatsApp">
+                            <i class="fab fa-whatsapp"></i>
+                        </a>
                     </div>
-                    
-                    <div class="footer-section">
-                        <h3>Links Rápidos</h3>
-                        <ul class="footer-links">
-                            <li><a href="/home" data-route><i class="fas fa-chevron-right"></i> Home</a></li>
-                            <li><a href="/adotar" data-route><i class="fas fa-chevron-right"></i> Adotar</a></li>
-                            <li><a href="/locais" data-route><i class="fas fa-chevron-right"></i> ONGs Parceiras</a></li>
-                            <li><a href="/sobre" data-route><i class="fas fa-chevron-right"></i> Sobre Nós</a></li>
-                        </ul>
-                    </div>
-                    
-                    <div class="footer-section">
-    <h3>Contato</h3>
-    <ul class="footer-links">
-        <li><a href="mailto:contatopetmatch@gmail.com"><i class="fas fa-envelope"></i> contatopetmatch@gmail.com</a></li>
-        <li><a href="https://wa.me/5511999647524" target="_blank"><i class="fab fa-whatsapp"></i> (11) 99964-7524</a></li>
-        <li><a href="https://www.instagram.com/petmatch90" target="_blank"><i class="fab fa-instagram"></i> @petmatch90</a></li>
-        <li><i class="fas fa-map-marker-alt"></i> Taboão da Serra, SP</li>
-    </ul>
-</div>
-                
-                <div class="footer-bottom">
-                    <p>&copy; ${new Date().getFullYear()} PetMatch. Todos os direitos reservados.</p>
-                    <p>Desenvolvido com <i class="fas fa-heart" style="color: #FF9C36;"></i> para pets especiais.</p>
                 </div>
-            </footer>
-        `;
-    }
+                
+                <div class="footer-section">
+                    <h3>Links Rápidos</h3>
+                    <ul class="footer-links">
+                        <li><a href="/home" data-route><i class="fas fa-chevron-right"></i> Home</a></li>
+                        <li><a href="/adotar" data-route><i class="fas fa-chevron-right"></i> Adotar</a></li>
+                        <li><a href="/locais" data-route><i class="fas fa-chevron-right"></i> ONGs Parceiras</a></li>
+                        <li><a href="/sobre" data-route><i class="fas fa-chevron-right"></i> Sobre Nós</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h3>Contato</h3>
+                    <ul class="footer-links">
+                        <li><a href="mailto:contato@petmatch.org"><i class="fas fa-envelope"></i> contato@petmatch.org</a></li>
+                        <li><a href="tel:+5511999999999"><i class="fas fa-phone"></i> (11) 99999-9999</a></li>
+                        <li><i class="fas fa-map-marker-alt"></i> São Paulo, SP</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; ${new Date().getFullYear()} PetMatch. Todos os direitos reservados.</p>
+                <p>Desenvolvido com <i class="fas fa-heart" style="color: #FF9C36;"></i> para pets especiais.</p>
+            </div>
+        </footer>
+    `;
+}
 
     renderContent() {
         switch (this.currentPath) {
@@ -713,9 +768,11 @@ class PetMatchApp {
                     </button>
                 </form>
 
-                <button id="toggle-auth" class="w-full mt-4 text-center text-primary-blue font-bold py-2 hover:underline transition-all cursor-pointer">
-                    ${isLogin ? 'Não tem conta? Cadastre-se aqui' : 'Já tem conta? Faça Login'}
-                </button>
+                <button
+  id="toggle-auth"
+  class="w-full mt-4 text-center font-bold py-2 transition-all cursor-pointer auth-toggle">
+  ${isLogin ? 'Não tem conta? Cadastre-se aqui' : 'Já tem conta? Faça Login'}
+</button>
             </div>
         `;
     }
@@ -895,13 +952,13 @@ class PetMatchApp {
                         <div class="filter-group">
                             <label class="filter-label">CEP</label>
                             <input 
-                                type="text" 
-                                placeholder="Digite seu CEP..." 
-                                class="form-input"
-                                id="cep-input"
-                                value="${this.state.cep}"
-                                maxlength="8"
-                            />
+                            type="text"
+                            placeholder="Digite seu CEP..."
+                            class="form-input"
+                            id="cep-input"
+                            value="${this.state.cep}"
+                            maxlength="9"
+                        />
                         </div>
                         
                         <div class="filter-group">
@@ -992,6 +1049,31 @@ class PetMatchApp {
         `;
     }
 
+    bindAdotarFilters() {
+    const cepInput = document.getElementById('cep-input');
+    const cidadeInput = document.getElementById('cidade-input');
+    const searchBtn = document.getElementById('search-pets');
+
+    if (cepInput) {
+        cepInput.oninput = (e) => {
+            this.state.cep = e.target.value;
+        };
+    }
+
+    if (cidadeInput) {
+        cidadeInput.oninput = (e) => {
+            this.state.cidade = e.target.value;
+        };
+    }
+
+    if (searchBtn) {
+        searchBtn.onclick = () => {
+            this.filterPets();
+        };
+    }
+}
+
+
     renderLocais() {
         return `
             <div class="w-full animate-in">
@@ -1000,34 +1082,21 @@ class PetMatchApp {
                     <p class="text-gray-600 text-center mb-8 max-w-2xl mx-auto">
                         Conheça nossas ONGs parceiras que cuidam com amor de pets com deficiência.
                     </p>
-                    
-                    <!-- Mapa -->
                     <div class="mb-8">
                         <h3 class="subtitle mb-4">Localização das ONGs</h3>
                         <div id="map" class="map-container"></div>
                     </div>
-                    
-                    <!-- Lista de ONGs -->
                     <div class="space-y-6">
                         ${APP_DATA.ongs.map(ong => `
                             <div class="ong-card">
                                 <div class="flex items-center gap-5 flex-col md:flex-row">
-                                    <div class="ong-icon">
-                                        <i class="fas fa-hands-helping"></i>
-                                    </div>
+                                    <div class="ong-icon"><i class="fas fa-hands-helping"></i></div>
                                     <div class="flex-1">
                                         <h4 class="ong-name">${ong.nome}</h4>
                                         <p class="text-gray-500 font-medium">${ong.endereco}</p>
-                                        <div class="rating mt-1">
-                                            ${Array.from({length: 5}, (_, i) => `
-                                                <i class="fas fa-star ${i < Math.floor(ong.nota) ? 'text-yellow-400' : 'text-gray-300'}"></i>
-                                            `).join('')}
-                                            <span class="font-bold ml-2">${ong.nota}</span>
-                                        </div>
                                     </div>
                                 </div>
                                 <div class="text-center md:text-right">
-                                    <span class="ong-distance block mb-2">${ong.distance}</span>
                                     <button class="btn btn-secondary contact-btn" data-ong-id="${ong.id}">
                                         <i class="fas fa-phone"></i> Contato
                                     </button>
@@ -1036,8 +1105,7 @@ class PetMatchApp {
                         `).join('')}
                     </div>
                 </div>
-            </div>
-        `;
+            </div>`;
     }
 
     renderSobre() {

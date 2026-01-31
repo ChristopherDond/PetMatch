@@ -12,43 +12,49 @@
 
 :root {
     /* Nova paleta de cores */
-    --primary-orange: #FF9C36;
-    --primary-yellow: #FFDE59;
-    --primary-pink: #FFB4E2;
-    --primary-brown: #BE5C3D;
-    --primary-blue: #1893F8;
+    --primary-orange: #FF9C36; /* Laranja */
+    --primary-yellow: #FFDE59; /* Amarelo */
+    --primary-pink: #FFB4E2;   /* Rosa */
+    --primary-brown: #BE5C3D;  /* Marrom */
+    --primary-blue: #1893F8;   /* Azul principal */
     
-    /* Tons complementares */
-    --orange-light: #FFB366;
-    --orange-dark: #E68A00;
-    --yellow-light: #FFE680;
-    --yellow-dark: #FFD700;
-    --pink-light: #FFC7E8;
-    --pink-dark: #FF8BD8;
-    --brown-light: #D17A5F;
-    --brown-dark: #9C4A2E;
-    --blue-light: #5DB0FF;
-    --blue-dark: #0078D7;
+    /* Tons complementares ajustados para a nova paleta */
+    --orange-light: #DBEAFE;   /* Azul Muito Claro */
+    --orange-dark: #1E40AF;    /* Azul Forte */
+    --yellow-light: #93C5FD;   /* Azul Médio */
+    --yellow-dark: #2563EB;    /* Azul Royal */
+    --pink-light: #CFFAFE;     /* Ciano Claro */
+    --pink-dark: #0891B2;      /* Ciano Escuro */
+    --brown-light: #1E293B;    /* Slate Dark */
+    --brown-dark: #0F172A;     /* Navy Dark */
+    --blue-light: #60A5FA;
+    --blue-dark: #1E3A8A;
     
-    /* Cores neutras */
+    /* Cores Neutras (Ajustadas para tons frios condizentes com a imagem) */
     --neutral-white: #FFFFFF;
-    --neutral-gray-50: #f9fafb;
-    --neutral-gray-100: #f3f4f6;
-    --neutral-gray-200: #e5e7eb;
-    --neutral-gray-300: #d1d5db;
-    --neutral-gray-400: #9ca3af;
-    --neutral-gray-500: #6b7280;
-    --neutral-gray-600: #4b5563;
-    --neutral-gray-700: #374151;
-    --neutral-gray-800: #1f2937;
-    --neutral-gray-900: #111827;
-    --neutral-black: #000000;
+    --neutral-gray-50: #F8FAFC;
+    --neutral-gray-100: #F1F5F9;
+    --neutral-gray-200: #E2E8F0;
+    --neutral-gray-300: #CBD5E1;
+    --neutral-gray-400: #94A3B8;
+    --neutral-gray-500: #64748B;
+    --neutral-gray-600: #475569;
+    --neutral-gray-700: #334155;
+    --neutral-gray-800: #1E293B;
+    --neutral-gray-900: #0F172A;
+    --neutral-black: #020617;
     
-    /* Cores para tema escuro */
-    --dark-bg: #121212;
-    --dark-surface: #1e1e1e;
-    --dark-primary: #FF9C36;
-    --dark-text: #e0e0e0;
+    /* Status (Mantidos para funcionalidade) */
+    --success: #10B981;
+    --warning: #F59E0B;
+    --error: #EF4444;
+    --info: #3B82F6;
+
+    /* Tema Escuro */
+    --dark-bg: #0F172A;
+    --dark-surface: #1E293B;
+    --dark-primary: #3B82F6;
+    --dark-text: #F1F5F9;
     
     /* Sombras */
     --shadow-sm: 0 1px 3px rgba(0,0,0,0.12);
@@ -1054,6 +1060,7 @@ body.dark-mode .modal-close {
     color: var(--neutral-gray-700);
 }
 
+
 body.dark-mode .pet-detail-description {
     color: var(--neutral-gray-300);
 }
@@ -1229,6 +1236,7 @@ body.dark-mode .empty-state-icon {
         font-size: 0.875rem;
     }
     
+    
     .filter-row {
         flex-direction: column;
         align-items: stretch;
@@ -1243,4 +1251,23 @@ body.dark-mode .empty-state-icon {
     justify-content: center;
 }
 
+}
+.auth-toggle {
+    background: transparent;
+    color: #e5f0ff; /* azul claro com contraste real */
+}
+
+.auth-toggle:hover {
+    color: #ffffff; /* branco puro */
+}
+
+.hero-section .btn-outline {
+    color: #0b3c5d;              /* azul escuro legível */
+    border-color: #0b3c5d;
+    background: transparent;
+}
+
+.hero-section .btn-outline:hover {
+    background-color: #0b3c5d;   /* fundo escurece */
+    color: #ffffff;              /* branco com contraste */
 }
