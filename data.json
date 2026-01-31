@@ -11,7 +11,7 @@
       "idade": "3 anos",
       "porte": "Pequeno",
       "tipo": "Cachorro",
-      "descricao": "Pipoca é uma cachorrinha muito carinhosa e adaptada à sua condição. Ela se orienta muito bem pelo olfato e audição.",
+      "descricao": "Pipoca é uma cachorrinha muito carinhosa e adaptada à sua condição. Ela se orienta muito bem pelo olfato e audição. Adora brincar com bolinhas que fazem barulho e é extremamente dócil com crianças.",
       "genero": "Fêmea"
     },
     {
@@ -25,7 +25,7 @@
       "idade": "2 anos",
       "porte": "Médio",
       "tipo": "Cachorro",
-      "descricao": "Bento perdeu uma patinha em um acidente, mas isso não o impede de correr e brincar como qualquer outro cachorro.",
+      "descricao": "Bento perdeu uma patinha em um acidente, mas isso não o impede de correr e brincar como qualquer outro cachorro. É extremamente rápido e adora perseguir bolinhas.",
       "genero": "Macho"
     },
     {
@@ -39,7 +39,7 @@
       "idade": "1 ano",
       "porte": "Médio",
       "tipo": "Cachorro",
-      "descricao": "Luna é uma cadelinha dócil que aprendeu comandos por sinais. Ela é extremamente atenta visualmente.",
+      "descricao": "Luna é uma cadelinha dócil que aprendeu comandos por sinais. Ela é extremamente atenta visualmente e responde muito bem a gestos. Adora colo e é muito companheira.",
       "genero": "Fêmea"
     },
     {
@@ -53,7 +53,7 @@
       "idade": "4 anos",
       "porte": "Grande",
       "tipo": "Cachorro",
-      "descricao": "Frederico usa sua cadeirinha de rodas com muita maestria e adora passear no parque.",
+      "descricao": "Frederico usa sua cadeirinha de rodas com muita maestria e adora passear no parque. É um cão muito sociável que se dá bem com outros animais e pessoas.",
       "genero": "Macho"
     },
     {
@@ -67,7 +67,7 @@
       "idade": "5 anos",
       "porte": "Grande",
       "tipo": "Cachorro",
-      "descricao": "Thor perdeu a visão de um dos olhos, mas seu instinto de proteção e carinho continuam intactos.",
+      "descricao": "Thor perdeu a visão de um dos olhos, mas seu instinto de proteção e carinho continuam intactos. É um excelente cão de guarda e muito leal à família.",
       "genero": "Macho"
     },
     {
@@ -81,7 +81,7 @@
       "idade": "2 anos",
       "porte": "Pequeno",
       "tipo": "Cachorro",
-      "descricao": "Mel é uma cachorrinha resiliente que faz fisioterapia e adora um colo quentinho.",
+      "descricao": "Mel é uma cachorrinha resiliente que faz fisioterapia e adora um colo quentinho. Sua determinação é inspiradora e ela conquista todos com seu olhar doce.",
       "genero": "Fêmea"
     },
     {
@@ -95,7 +95,7 @@
       "idade": "3 anos",
       "porte": "Médio",
       "tipo": "Cachorro",
-      "descricao": "Oscar é a alegria em forma de cão. Sua falta de uma pata traseira não tira sua velocidade nas brincadeiras.",
+      "descricao": "Oscar é a alegria em forma de cão. Sua falta de uma pata traseira não tira sua velocidade nas brincadeiras. Adora correr no parque e fazer novos amigos.",
       "genero": "Macho"
     },
     {
@@ -109,7 +109,7 @@
       "idade": "1 ano",
       "porte": "Pequeno",
       "tipo": "Cachorro",
-      "descricao": "Nina é uma cachorrinha corajosa que explora o mundo com seu focinho e adora brinquedos sonoros.",
+      "descricao": "Nina é uma cachorrinha corajosa que explora o mundo com seu focinho e adora brinquedos sonoros. Sua capacidade de adaptação é incrível e ela é muito independente.",
       "genero": "Fêmea"
     }
   ],
@@ -117,7 +117,7 @@
     {
       "id": 1,
       "nome": "ONG Patinhas",
-      "endereco": "Av. Paulista, 1000",
+      "endereco": "Av. Paulista, 1000 - São Paulo, SP",
       "distance": "2.5km",
       "nota": 4.9,
       "cidade": "São Paulo",
@@ -129,7 +129,7 @@
     {
       "id": 2,
       "nome": "ONG Patinhas Carentes",
-      "endereco": "Rua das Flores, 50",
+      "endereco": "Rua das Flores, 50 - São Paulo, SP",
       "distance": "4.8km",
       "nota": 4.8,
       "cidade": "São Paulo",
@@ -141,7 +141,7 @@
     {
       "id": 3,
       "nome": "Resgate Animal",
-      "endereco": "Rua dos Animais, 123",
+      "endereco": "Rua dos Animais, 123 - Osasco, SP",
       "distance": "3.2km",
       "nota": 4.9,
       "cidade": "Osasco",
@@ -153,7 +153,7 @@
     {
       "id": 4,
       "nome": "Anjos de Patas",
-      "endereco": "Alameda Santos, 456",
+      "endereco": "Alameda Santos, 456 - São Paulo, SP",
       "distance": "5.1km",
       "nota": 4.7,
       "cidade": "São Paulo",

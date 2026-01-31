@@ -21,6 +21,174 @@ async function loadAppData() {
     }
 }
 
+// Utilitários de animação
+const AnimationUtils = {
+    // Anima elementos quando entram na viewport
+    observeElements: (selector, animationClass = 'animate-in') => {
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry, index) => {
+                if (entry.isIntersecting) {
+                    setTimeout(() => {
+                        entry.target.classList.add(animationClass);
+                        entry.target.style.opacity = '1';
+                    }, index * 100);
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+
+        document.querySelectorAll(selector).forEach(el => {
+            el.style.opacity = '0';
+            observer.observe(el);
+        });
+    },
+
+    // Adiciona efeito de ripple aos botões
+    addRippleEffect: (button) => {
+        button.addEventListener('click', function(e) {
+            const ripple = document.createElement('span');
+            const rect = this.getBoundingClientRect();
+            const size = Math.max(rect.width, rect.height);
+            const x = e.clientX - rect.left - size / 2;
+            const y = e.clientY - rect.top - size / 2;
+            
+            ripple.style.cssText = `
+                position: absolute;
+                width: ${size}px;
+                height: ${size}px;
+                left: ${x}px;
+                top: ${y}px;
+                background: rgba(255,255,255,0.4);
+                border-radius: 50%;
+                transform: scale(0);
+                animation: rippleEffect 0.6s ease-out;
+                pointer-events: none;
+            `;
+            
+            this.style.position = 'relative';
+            this.style.overflow = 'hidden';
+            this.appendChild(ripple);
+            
+            setTimeout(() => ripple.remove(), 600);
+        });
+    },
+
+    // Anima contadores
+    animateCounter: (element, target, duration = 2000) => {
+        const start = 0;
+        const increment = target / (duration / 16);
+        let current = start;
+        
+        const updateCounter = () => {
+            current += increment;
+            if (current < target) {
+                element.textContent = Math.floor(current);
+                requestAnimationFrame(updateCounter);
+            } else {
+                element.textContent = target;
+            }
+        };
+        
+        updateCounter();
+    },
+
+    // Efeito de digitação
+    typewriterEffect: (element, text, speed = 50) => {
+        let i = 0;
+        element.textContent = '';
+        
+        const type = () => {
+            if (i < text.length) {
+                element.textContent += text.charAt(i);
+                i++;
+                setTimeout(type, speed);
+            }
+        };
+        
+        type();
+    },
+
+    // Shake animation para erros
+    shakeElement: (element) => {
+        element.style.animation = 'shake 0.5s ease';
+        setTimeout(() => {
+            element.style.animation = '';
+        }, 500);
+    },
+
+    // Confetti effect
+    createConfetti: (x, y) => {
+        const colors = ['#FF9C36', '#FFDE59', '#FFB4E2', '#1893F8', '#BE5C3D'];
+        const confettiCount = 30;
+        
+        for (let i = 0; i < confettiCount; i++) {
+            const confetti = document.createElement('div');
+            confetti.style.cssText = `
+                position: fixed;
+                width: 10px;
+                height: 10px;
+                background: ${colors[Math.floor(Math.random() * colors.length)]};
+                left: ${x}px;
+                top: ${y}px;
+                border-radius: ${Math.random() > 0.5 ? '50%' : '0'};
+                pointer-events: none;
+                z-index: 9999;
+            `;
+            
+            document.body.appendChild(confetti);
+            
+            const angle = (Math.PI * 2 * i) / confettiCount;
+            const velocity = 100 + Math.random() * 100;
+            const vx = Math.cos(angle) * velocity;
+            const vy = Math.sin(angle) * velocity - 100;
+            
+            let posX = x;
+            let posY = y;
+            let velX = vx;
+            let velY = vy;
+            let rotation = 0;
+            let rotationSpeed = (Math.random() - 0.5) * 20;
+            
+            const animate = () => {
+                velY += 5; // gravity
+                posX += velX * 0.016;
+                posY += velY * 0.016;
+                rotation += rotationSpeed;
+                
+                confetti.style.left = posX + 'px';
+                confetti.style.top = posY + 'px';
+                confetti.style.transform = `rotate(${rotation}deg)`;
+                confetti.style.opacity = Math.max(0, 1 - (posY - y) / 500);
+                
+                if (posY < window.innerHeight + 100 && confetti.style.opacity > 0) {
+                    requestAnimationFrame(animate);
+                } else {
+                    confetti.remove();
+                }
+            };
+            
+            requestAnimationFrame(animate);
+        }
+    }
+};
+
+// Adicionar keyframes para ripple e shake
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes rippleEffect {
+        to {
+            transform: scale(2);
+            opacity: 0;
+        }
+    }
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+        20%, 40%, 60%, 80% { transform: translateX(5px); }
+    }
+`;
+document.head.appendChild(style);
+
 // Componentes React-like em JavaScript puro
 class PetMatchApp {
     constructor() {
@@ -58,12 +226,37 @@ class PetMatchApp {
             filteredPets: APP_DATA.pets,
             isLoading: false 
         });
+        
+        // Inicializar animações após renderização
+        setTimeout(() => this.initAnimations(), 100);
+    }
+
+    initAnimations() {
+        // Observar elementos para animação de entrada
+        AnimationUtils.observeElements('.pet-card', 'animate-in-scale');
+        AnimationUtils.observeElements('.info-card', 'animate-in');
+        AnimationUtils.observeElements('.ong-card', 'animate-slide');
+        AnimationUtils.observeElements('.founder-card', 'animate-in-scale');
+        
+        // Adicionar efeito ripple aos botões
+        document.querySelectorAll('.btn').forEach(btn => {
+            AnimationUtils.addRippleEffect(btn);
+        });
+        
+        // Animar contadores de estatísticas
+        document.querySelectorAll('.stat-number').forEach(stat => {
+            const value = parseInt(stat.textContent);
+            if (!isNaN(value)) {
+                AnimationUtils.animateCounter(stat, value);
+            }
+        });
     }
 
     setupRouting() {
         window.addEventListener('popstate', () => {
             this.currentPath = window.location.pathname;
             this.render();
+            setTimeout(() => this.initAnimations(), 100);
         });
 
         // Intercepta clicks em links
@@ -81,6 +274,7 @@ class PetMatchApp {
         window.history.pushState({}, '', path);
         this.currentPath = path;
         this.render();
+        setTimeout(() => this.initAnimations(), 100);
     }
 
     setState(newState) {
@@ -118,7 +312,10 @@ class PetMatchApp {
 
             // Favoritar pet
             if (e.target.closest('.favorite-btn')) {
-                const petId = parseInt(e.target.closest('.favorite-btn').dataset.petId);
+                const btn = e.target.closest('.favorite-btn');
+                const petId = parseInt(btn.dataset.petId);
+                const rect = btn.getBoundingClientRect();
+                AnimationUtils.createConfetti(rect.left + rect.width/2, rect.top + rect.height/2);
                 this.toggleFavorite(petId);
             }
 
@@ -130,7 +327,9 @@ class PetMatchApp {
 
             // Fechar modal
             if (e.target.closest('.modal-close') || e.target.closest('.modal')) {
-                this.closeModal();
+                if (e.target.classList.contains('modal') || e.target.closest('.modal-close')) {
+                    this.closeModal();
+                }
             }
 
             // Abrir filtros
@@ -156,18 +355,21 @@ class PetMatchApp {
 
             // Paginação
             if (e.target.closest('.pagination-btn')) {
-                const page = parseInt(e.target.closest('.pagination-btn').dataset.page);
-                this.goToPage(page);
+                const btn = e.target.closest('.pagination-btn');
+                if (!btn.disabled) {
+                    const page = parseInt(btn.dataset.page);
+                    this.goToPage(page);
+                }
             }
         });
 
         document.addEventListener('input', (e) => {
             if (e.target.id === 'cep-input') {
-        this.state.cep = e.target.value; // Atribuição direta sem render()
-    }
-    if (e.target.id === 'cidade-input') {
-        this.state.cidade = e.target.value; // Atribuição direta sem render()
-    }
+                this.state.cep = e.target.value;
+            }
+            if (e.target.id === 'cidade-input') {
+                this.state.cidade = e.target.value;
+            }
             if (e.target.id === 'filter-deficiencia') {
                 this.setState({ filters: { ...this.state.filters, deficiencia: e.target.value } });
             }
@@ -193,17 +395,42 @@ class PetMatchApp {
     }
 
     handleAuthSubmit() {
-        this.navigateTo('/home');
+        // Animação de transição
+        const card = document.querySelector('.card');
+        if (card) {
+            card.style.animation = 'fadeInScale 0.5s ease reverse';
+            setTimeout(() => {
+                this.navigateTo('/home');
+            }, 300);
+        } else {
+            this.navigateTo('/home');
+        }
     }
 
     async handleContactSubmit(e) {
         e.preventDefault();
-        const formData = new FormData(e.target);
-        const data = Object.fromEntries(formData);
+        const form = e.target;
+        const submitBtn = form.querySelector('button[type="submit"]');
+        
+        // Animação de loading no botão
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+        submitBtn.disabled = true;
         
         // Simular envio
-        alert('Mensagem enviada com sucesso! Entraremos em contato em breve.');
-        this.closeModal();
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        // Confetti effect
+        const rect = submitBtn.getBoundingClientRect();
+        AnimationUtils.createConfetti(rect.left + rect.width/2, rect.top + rect.height/2);
+        
+        submitBtn.innerHTML = '<i class="fas fa-check"></i> Enviado!';
+        submitBtn.style.background = 'linear-gradient(135deg, #10B981, #059669)';
+        
+        setTimeout(() => {
+            alert('Mensagem enviada com sucesso! Entraremos em contato em breve.');
+            this.closeModal();
+        }, 500);
     }
 
     toggleDarkMode() {
@@ -211,6 +438,19 @@ class PetMatchApp {
         this.setState({ darkMode: newDarkMode });
         localStorage.setItem('petmatch_darkmode', newDarkMode);
         document.body.classList.toggle('dark-mode', newDarkMode);
+        
+        // Animação de transição
+        document.body.style.transition = 'background-color 0.5s ease, color 0.5s ease';
+        
+        // Atualizar ícone com animação
+        const themeIcon = document.querySelector('#theme-toggle i');
+        if (themeIcon) {
+            themeIcon.style.transform = 'rotate(360deg) scale(0)';
+            setTimeout(() => {
+                themeIcon.className = `fas ${newDarkMode ? 'fa-sun' : 'fa-moon'}`;
+                themeIcon.style.transform = 'rotate(0deg) scale(1)';
+            }, 200);
+        }
     }
 
     toggleFavorite(petId) {
@@ -232,6 +472,12 @@ class PetMatchApp {
             btn.classList.toggle('active');
             const icon = btn.querySelector('i');
             icon.className = favorites.includes(petId) ? 'fas fa-heart' : 'far fa-heart';
+            
+            // Animação extra
+            btn.style.transform = 'scale(1.3)';
+            setTimeout(() => {
+                btn.style.transform = '';
+            }, 200);
         }
     }
 
@@ -251,8 +497,6 @@ class PetMatchApp {
         this.setState({ recentlyViewed });
         localStorage.setItem('petmatch_recently_viewed', JSON.stringify(recentlyViewed));
     }
-
-    
 
     applyFilters() {
         const { filters } = this.state;
@@ -281,6 +525,11 @@ class PetMatchApp {
             currentPage: 1 
         });
         this.closeModal();
+        
+        // Animação nos resultados
+        setTimeout(() => {
+            AnimationUtils.observeElements('.pet-card', 'animate-in-scale');
+        }, 100);
     }
 
     clearFilters() {
@@ -301,6 +550,11 @@ class PetMatchApp {
     goToPage(page) {
         this.setState({ currentPage: page });
         window.scrollTo({ top: 0, behavior: 'smooth' });
+        
+        // Animação nos cards
+        setTimeout(() => {
+            AnimationUtils.observeElements('.pet-card', 'animate-in-scale');
+        }, 100);
     }
 
     showPetModal(petId) {
@@ -314,7 +568,7 @@ class PetMatchApp {
         
         modalBody.innerHTML = `
             <div class="pet-detail-content">
-                <img src="${pet.imagem}" class="pet-detail-image" alt="${pet.nome}">
+                <img src="${pet.imagem}" class="pet-detail-image" alt="${pet.nome}" loading="eager">
                 <div class="pet-detail-info">
                     <div class="flex justify-between items-center">
                         <h3 class="pet-name">${pet.nome}</h3>
@@ -338,7 +592,7 @@ class PetMatchApp {
                     <p class="pet-detail-description">${pet.descricao}</p>
                     
                     <div class="flex gap-4 mt-6">
-                        <button class="btn btn-primary flex-1">
+                        <button class="btn btn-primary flex-1 adopt-btn">
                             <i class="fas fa-heart"></i> Adotar
                         </button>
                         <button class="btn btn-outline flex-1 contact-btn" data-ong-id="${APP_DATA.ongs.find(o => o.nome === pet.ong)?.id || ''}">
@@ -349,8 +603,34 @@ class PetMatchApp {
             </div>
         `;
         
+        // Adicionar evento ao botão de adoção
+        const adoptBtn = modalBody.querySelector('.adopt-btn');
+        if (adoptBtn) {
+            adoptBtn.addEventListener('click', (e) => {
+                const rect = adoptBtn.getBoundingClientRect();
+                AnimationUtils.createConfetti(rect.left + rect.width/2, rect.top + rect.height/2);
+                
+                adoptBtn.innerHTML = '<i class="fas fa-check"></i> Solicitação Enviada!';
+                adoptBtn.style.background = 'linear-gradient(135deg, #10B981, #059669)';
+                
+                setTimeout(() => {
+                    alert(`Sua solicitação de adoção para ${pet.nome} foi enviada! A ONG entrará em contato em breve.`);
+                }, 500);
+            });
+            AnimationUtils.addRippleEffect(adoptBtn);
+        }
+        
         modal.classList.add('active');
         document.body.style.overflow = 'hidden';
+        
+        // Animação de entrada do modal
+        setTimeout(() => {
+            const content = modal.querySelector('.modal-content');
+            if (content) {
+                content.style.transform = 'scale(1) translateY(0)';
+                content.style.opacity = '1';
+            }
+        }, 10);
     }
 
     showFilterModal() {
@@ -421,10 +701,10 @@ class PetMatchApp {
             
             <div class="flex gap-3 mt-6">
                 <button id="apply-filters" class="btn btn-primary flex-1">
-                    Aplicar Filtros
+                    <i class="fas fa-check"></i> Aplicar Filtros
                 </button>
                 <button id="clear-filters" class="btn btn-outline flex-1">
-                    Limpar Filtros
+                    <i class="fas fa-undo"></i> Limpar Filtros
                 </button>
             </div>
         `;
@@ -443,35 +723,35 @@ class PetMatchApp {
         modalBody.innerHTML = `
             <h3 class="subtitle mb-4">Contato: ${ong.nome}</h3>
             
-            <div class="mb-6">
-                <p class="mb-2"><strong>Endereço:</strong> ${ong.endereco}</p>
-                <p class="mb-2"><strong>Telefone:</strong> ${ong.telefone}</p>
-                <p class="mb-2"><strong>Email:</strong> ${ong.email}</p>
+            <div class="mb-6" style="background: var(--neutral-gray-50); padding: 1rem; border-radius: var(--radius-md);">
+                <p class="mb-2"><i class="fas fa-map-marker-alt text-primary-orange"></i> <strong>Endereço:</strong> ${ong.endereco}</p>
+                <p class="mb-2"><i class="fas fa-phone text-primary-blue"></i> <strong>Telefone:</strong> ${ong.telefone}</p>
+                <p class="mb-2"><i class="fas fa-envelope text-primary-pink"></i> <strong>Email:</strong> ${ong.email}</p>
             </div>
             
             <form id="contact-form" class="space-y-4">
                 <div>
                     <label class="filter-label">Seu Nome</label>
-                    <input type="text" name="nome" class="form-input" required>
+                    <input type="text" name="nome" class="form-input" required placeholder="Digite seu nome">
                 </div>
                 
                 <div>
                     <label class="filter-label">Seu Email</label>
-                    <input type="email" name="email" class="form-input" required>
+                    <input type="email" name="email" class="form-input" required placeholder="seu@email.com">
                 </div>
                 
                 <div>
                     <label class="filter-label">Seu Telefone</label>
-                    <input type="tel" name="telefone" class="form-input">
+                    <input type="tel" name="telefone" class="form-input" placeholder="(11) 99999-9999">
                 </div>
                 
                 <div>
                     <label class="filter-label">Mensagem</label>
-                    <textarea name="mensagem" class="form-input" rows="4" required></textarea>
+                    <textarea name="mensagem" class="form-input" rows="4" required placeholder="Escreva sua mensagem..."></textarea>
                 </div>
                 
                 <button type="submit" class="btn btn-primary w-full">
-                    Enviar Mensagem
+                    <i class="fas fa-paper-plane"></i> Enviar Mensagem
                 </button>
             </form>
         `;
@@ -481,10 +761,21 @@ class PetMatchApp {
     }
 
     closeModal() {
-        document.querySelectorAll('.modal').forEach(modal => {
-            modal.classList.remove('active');
+        const modals = document.querySelectorAll('.modal');
+        modals.forEach(modal => {
+            const content = modal.querySelector('.modal-content');
+            if (content) {
+                content.style.transform = 'scale(0.9) translateY(20px)';
+                content.style.opacity = '0';
+            }
         });
-        document.body.style.overflow = 'auto';
+        
+        setTimeout(() => {
+            modals.forEach(modal => {
+                modal.classList.remove('active');
+            });
+            document.body.style.overflow = 'auto';
+        }, 300);
     }
 
     initMap() {
@@ -498,18 +789,27 @@ class PetMatchApp {
             attribution: '© OpenStreetMap contributors'
         }).addTo(map);
         
-        // Adicionar marcadores das ONGs
-        APP_DATA.ongs.forEach(ong => {
+        // Adicionar marcadores das ONGs com animação
+        APP_DATA.ongs.forEach((ong, index) => {
             if (ong.lat && ong.lng) {
-                const marker = L.marker([ong.lat, ong.lng]).addTo(map);
-                marker.bindPopup(`
-                    <strong>${ong.nome}</strong><br>
-                    ${ong.endereco}<br>
-                    ${ong.telefone}<br>
-                    <button class="contact-btn" data-ong-id="${ong.id}" style="margin-top: 10px; padding: 5px 10px; background: #007BFF; color: white; border: none; border-radius: 5px; cursor: pointer;">
-                        Contatar
-                    </button>
-                `);
+                setTimeout(() => {
+                    const marker = L.marker([ong.lat, ong.lng]).addTo(map);
+                    marker.bindPopup(`
+                        <div style="text-align: center; padding: 10px;">
+                            <strong style="font-size: 1.1rem; color: #1893F8;">${ong.nome}</strong><br>
+                            <span style="color: #666;">${ong.endereco}</span><br>
+                            <span style="color: #999;">${ong.telefone}</span><br>
+                            <button class="contact-btn" data-ong-id="${ong.id}" style="margin-top: 10px; padding: 8px 16px; background: linear-gradient(135deg, #1893F8, #FF9C36); color: white; border: none; border-radius: 20px; cursor: pointer; font-weight: bold; transition: all 0.3s ease;">
+                                <i class="fas fa-phone"></i> Contatar
+                            </button>
+                        </div>
+                    `);
+                    
+                    // Animação de bounce no marcador
+                    marker.on('add', function() {
+                        this._icon.style.animation = 'bounce 0.5s ease';
+                    });
+                }, index * 200);
             }
         });
     }
@@ -544,7 +844,13 @@ class PetMatchApp {
             filteredPets,
             currentPage: 1 
         });
+        
+        // Animação nos resultados
+        setTimeout(() => {
+            AnimationUtils.observeElements('.pet-card', 'animate-in-scale');
+        }, 100);
     }
+
     render() {
         const root = document.getElementById('root');
         const isAuthPage = this.currentPath === '/';
@@ -569,18 +875,34 @@ class PetMatchApp {
         if (this.currentPath === '/locais' && !this.state.isLoading) {
             setTimeout(() => this.initMap(), 100);
         }
+        
+        // Adicionar efeitos aos botões após renderização
+        setTimeout(() => {
+            document.querySelectorAll('.btn').forEach(btn => {
+                AnimationUtils.addRippleEffect(btn);
+            });
+        }, 50);
     }
 
-bindAdotarFilters() {
+    bindAdotarFilters() {
         const cepInput = document.getElementById('cep-input');
         const cidadeInput = document.getElementById('cidade-input');
         const searchBtn = document.getElementById('search-pets');
         const clearBtn = document.getElementById('clear-filters');
 
         if (cepInput) {
-            // Atualiza apenas o dado no estado, sem chamar render() para não perder o foco
             cepInput.addEventListener('input', (e) => {
                 this.state.cep = e.target.value;
+            });
+            
+            // Máscara de CEP
+            cepInput.addEventListener('input', (e) => {
+                let value = e.target.value.replace(/\D/g, '');
+                if (value.length > 5) {
+                    value = value.substring(0, 5) + '-' + value.substring(5, 8);
+                }
+                e.target.value = value;
+                this.state.cep = value;
             });
         }
 
@@ -592,7 +914,11 @@ bindAdotarFilters() {
 
         if (searchBtn) {
             searchBtn.addEventListener('click', () => {
-                this.filterPets(); // O render() acontece aqui ao processar o filtro
+                // Animação no botão
+                searchBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Buscando...';
+                setTimeout(() => {
+                    this.filterPets();
+                }, 500);
             });
         }
 
@@ -608,14 +934,11 @@ bindAdotarFilters() {
         }
     }
 
-
-
-
-updateList() {
-    const content = document.getElementById('dynamic-content');
-    if (!content) return;
-    content.innerHTML = this.renderContent();
-}
+    updateList() {
+        const content = document.getElementById('dynamic-content');
+        if (!content) return;
+        content.innerHTML = this.renderContent();
+    }
 
     renderLoading() {
         return `
@@ -634,8 +957,8 @@ updateList() {
             <header class="app-header">
                 <a href="${isAuthPage ? '/' : '/home'}" class="logo-link" data-route>
                     <div class="logo-image">
-    <img src="logo_petmatch.jpeg" alt="PetMatch Logo" style="width: 50px; height: 50px; border-radius: 12px; object-fit: cover;">
-</div>
+                        <img src="logo_petmatch.jpeg" alt="PetMatch Logo" style="width: 50px; height: 50px; border-radius: 12px; object-fit: cover;">
+                    </div>
                     <span class="logo-text">PetMatch</span>
                 </a>
 
@@ -674,55 +997,55 @@ updateList() {
     }
 
     renderFooter() {
-    return `
-        <footer class="app-footer">
-            <div class="footer-content">
-                <div class="footer-section">
-                    <h3>PetMatch</h3>
-                    <p>Conectando pets com deficiência a lares amorosos desde 2024.</p>
-                    <div class="social-icons">
-                        <a href="#" class="social-icon" aria-label="Facebook">
-                            <i class="fab fa-facebook-f"></i>
-                        </a>
-                        <a href="https://www.instagram.com/petmatch90" target="_blank" rel="noopener noreferrer" class="social-icon" aria-label="Instagram">
-                            <i class="fab fa-instagram"></i>
-                        </a>
-                        <a href="#" class="social-icon" aria-label="Twitter">
-                            <i class="fab fa-twitter"></i>
-                        </a>
-                        <a href="#" class="social-icon" aria-label="WhatsApp">
-                            <i class="fab fa-whatsapp"></i>
-                        </a>
+        return `
+            <footer class="app-footer">
+                <div class="footer-content">
+                    <div class="footer-section">
+                        <h3>PetMatch</h3>
+                        <p>Conectando pets com deficiência a lares amorosos desde 2024.</p>
+                        <div class="social-icons">
+                            <a href="#" class="social-icon" aria-label="Facebook">
+                                <i class="fab fa-facebook-f"></i>
+                            </a>
+                            <a href="https://www.instagram.com/petmatch90" target="_blank" rel="noopener noreferrer" class="social-icon" aria-label="Instagram">
+                                <i class="fab fa-instagram"></i>
+                            </a>
+                            <a href="#" class="social-icon" aria-label="Twitter">
+                                <i class="fab fa-twitter"></i>
+                            </a>
+                            <a href="#" class="social-icon" aria-label="WhatsApp">
+                                <i class="fab fa-whatsapp"></i>
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <div class="footer-section">
+                        <h3>Links Rápidos</h3>
+                        <ul class="footer-links">
+                            <li><a href="/home" data-route><i class="fas fa-chevron-right"></i> Home</a></li>
+                            <li><a href="/adotar" data-route><i class="fas fa-chevron-right"></i> Adotar</a></li>
+                            <li><a href="/locais" data-route><i class="fas fa-chevron-right"></i> ONGs Parceiras</a></li>
+                            <li><a href="/sobre" data-route><i class="fas fa-chevron-right"></i> Sobre Nós</a></li>
+                        </ul>
+                    </div>
+                    
+                    <div class="footer-section">
+                        <h3>Contato</h3>
+                        <ul class="footer-links">
+                            <li><a href="mailto:contato@petmatch.org"><i class="fas fa-envelope"></i> contato@petmatch.org</a></li>
+                            <li><a href="tel:+5511999999999"><i class="fas fa-phone"></i> (11) 99999-9999</a></li>
+                            <li><i class="fas fa-map-marker-alt"></i> São Paulo, SP</li>
+                        </ul>
                     </div>
                 </div>
                 
-                <div class="footer-section">
-                    <h3>Links Rápidos</h3>
-                    <ul class="footer-links">
-                        <li><a href="/home" data-route><i class="fas fa-chevron-right"></i> Home</a></li>
-                        <li><a href="/adotar" data-route><i class="fas fa-chevron-right"></i> Adotar</a></li>
-                        <li><a href="/locais" data-route><i class="fas fa-chevron-right"></i> ONGs Parceiras</a></li>
-                        <li><a href="/sobre" data-route><i class="fas fa-chevron-right"></i> Sobre Nós</a></li>
-                    </ul>
+                <div class="footer-bottom">
+                    <p>&copy; ${new Date().getFullYear()} PetMatch. Todos os direitos reservados.</p>
+                    <p>Desenvolvido com <i class="fas fa-heart" style="color: #FF9C36;"></i> para pets especiais.</p>
                 </div>
-                
-                <div class="footer-section">
-                    <h3>Contato</h3>
-                    <ul class="footer-links">
-                        <li><a href="mailto:contato@petmatch.org"><i class="fas fa-envelope"></i> contato@petmatch.org</a></li>
-                        <li><a href="tel:+5511999999999"><i class="fas fa-phone"></i> (11) 99999-9999</a></li>
-                        <li><i class="fas fa-map-marker-alt"></i> São Paulo, SP</li>
-                    </ul>
-                </div>
-            </div>
-            
-            <div class="footer-bottom">
-                <p>&copy; ${new Date().getFullYear()} PetMatch. Todos os direitos reservados.</p>
-                <p>Desenvolvido com <i class="fas fa-heart" style="color: #FF9C36;"></i> para pets especiais.</p>
-            </div>
-        </footer>
-    `;
-}
+            </footer>
+        `;
+    }
 
     renderContent() {
         switch (this.currentPath) {
@@ -764,15 +1087,13 @@ updateList() {
                     <input type="password" placeholder="Senha" class="form-input" required />
                     
                     <button type="submit" class="btn btn-primary w-full">
-                        ${isLogin ? 'Entrar' : 'Cadastrar'}
+                        ${isLogin ? '<i class="fas fa-sign-in-alt"></i> Entrar' : '<i class="fas fa-user-plus"></i> Cadastrar'}
                     </button>
                 </form>
 
-                <button
-  id="toggle-auth"
-  class="w-full mt-4 text-center font-bold py-2 transition-all cursor-pointer auth-toggle">
-  ${isLogin ? 'Não tem conta? Cadastre-se aqui' : 'Já tem conta? Faça Login'}
-</button>
+                <button id="toggle-auth" class="w-full mt-4 text-center font-bold py-2 transition-all cursor-pointer auth-toggle">
+                    ${isLogin ? 'Não tem conta? Cadastre-se aqui' : 'Já tem conta? Faça Login'}
+                </button>
             </div>
         `;
     }
@@ -787,13 +1108,13 @@ updateList() {
         const featuredPets = APP_DATA.pets.slice(0, 3);
         
         return `
-            <div class="w-full space-y-10 animate-in">
+            <div class="w-full space-y-10">
                 <!-- Hero Section -->
-                <div class="hero-section">
+                <div class="hero-section animate-in">
                     <div class="hero-content">
                         <div class="flex justify-center mb-6">
-                            <div class="bg-white p-4 rounded-3xl shadow-lg">
-                                <i class="fas fa-paw text-4xl text-primary-orange"></i>
+                            <div class="hero-paw-icon">
+                                <i class="fas fa-paw"></i>
                             </div>
                         </div>
                         
@@ -817,13 +1138,14 @@ updateList() {
                     
                     <div class="decoration-circle decoration-1"></div>
                     <div class="decoration-circle decoration-2"></div>
+                    <div class="decoration-circle decoration-3"></div>
                 </div>
 
                 <!-- Pets em Destaque -->
-                <div>
+                <div class="animate-in" style="animation-delay: 0.2s;">
                     <h2 class="subtitle mb-6 text-center">Pets Disponíveis</h2>
                     <div class="pets-grid">
-                        ${featuredPets.map(pet => this.renderPetCard(pet)).join('')}
+                        ${featuredPets.map((pet, index) => this.renderPetCard(pet, index)).join('')}
                     </div>
                     <div class="text-center mt-6">
                         <a href="/adotar" class="btn btn-secondary" data-route>
@@ -834,7 +1156,7 @@ updateList() {
 
                 <!-- Info Cards -->
                 <div class="grid md:grid-3 gap-6">
-                    <div class="info-card">
+                    <div class="info-card" style="animation-delay: 0.1s;">
                         <div class="info-icon">
                             <i class="fas fa-heart"></i>
                         </div>
@@ -844,9 +1166,9 @@ updateList() {
                         </p>
                     </div>
 
-                    <div class="info-card">
+                    <div class="info-card" style="animation-delay: 0.2s;">
                         <div class="info-icon">
-                            <i class="fas fa-star"></i>
+                            <i class="fas fa-shield-alt"></i>
                         </div>
                         <h3 class="info-title">Processo Seguro</h3>
                         <p class="text-gray-700">
@@ -854,7 +1176,7 @@ updateList() {
                         </p>
                     </div>
 
-                    <div class="info-card">
+                    <div class="info-card" style="animation-delay: 0.3s;">
                         <div class="info-icon">
                             <i class="fas fa-hands-helping"></i>
                         </div>
@@ -867,16 +1189,16 @@ updateList() {
 
                 <!-- Pets Vistos Recentemente -->
                 ${recentlyViewedPets.length > 0 ? `
-                    <div class="mt-10">
+                    <div class="mt-10 animate-in">
                         <h2 class="subtitle mb-6 text-center">Vistos Recentemente</h2>
                         <div class="pets-grid">
-                            ${recentlyViewedPets.map(pet => this.renderPetCard(pet)).join('')}
+                            ${recentlyViewedPets.map((pet, index) => this.renderPetCard(pet, index)).join('')}
                         </div>
                     </div>
                 ` : ''}
 
                 <!-- Call to Action -->
-                <div class="text-center py-10">
+                <div class="text-center py-10 animate-in" style="background: linear-gradient(135deg, rgba(255,156,54,0.1), rgba(255,180,226,0.1)); border-radius: var(--radius-xl); padding: 3rem;">
                     <h3 class="text-3xl font-bold text-gray-800 mb-4">
                         Pronto para mudar uma vida?
                     </h3>
@@ -896,11 +1218,11 @@ updateList() {
         `;
     }
 
-    renderPetCard(pet) {
+    renderPetCard(pet, index = 0) {
         const isFavorite = this.state.favorites.includes(pet.id);
         
         return `
-            <div class="pet-card">
+            <div class="pet-card" style="animation-delay: ${index * 0.1}s;">
                 <button class="favorite-btn ${isFavorite ? 'active' : ''}" data-pet-id="${pet.id}" aria-label="${isFavorite ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}">
                     <i class="${isFavorite ? 'fas' : 'far'} fa-heart"></i>
                 </button>
@@ -952,13 +1274,13 @@ updateList() {
                         <div class="filter-group">
                             <label class="filter-label">CEP</label>
                             <input 
-                            type="text"
-                            placeholder="Digite seu CEP..."
-                            class="form-input"
-                            id="cep-input"
-                            value="${this.state.cep}"
-                            maxlength="9"
-                        />
+                                type="text"
+                                placeholder="Digite seu CEP..."
+                                class="form-input"
+                                id="cep-input"
+                                value="${this.state.cep}"
+                                maxlength="9"
+                            />
                         </div>
                         
                         <div class="filter-group">
@@ -985,7 +1307,7 @@ updateList() {
                         </button>
                         <div class="ml-auto">
                             <span class="text-gray-600 font-medium">
-                                ${filteredPets.length} pets encontrados
+                                <i class="fas fa-paw"></i> ${filteredPets.length} pets encontrados
                             </span>
                         </div>
                     </div>
@@ -1000,12 +1322,12 @@ updateList() {
                         <h3 class="text-xl font-bold mb-2">Nenhum pet encontrado</h3>
                         <p class="text-gray-500">Tente ajustar os filtros de busca.</p>
                         <button id="clear-filters" class="btn btn-primary mt-4">
-                            Limpar Filtros
+                            <i class="fas fa-undo"></i> Limpar Filtros
                         </button>
                     </div>
                 ` : `
                     <div class="pets-grid">
-                        ${paginatedPets.map(pet => this.renderPetCard(pet)).join('')}
+                        ${paginatedPets.map((pet, index) => this.renderPetCard(pet, index)).join('')}
                     </div>
                 `}
 
@@ -1049,31 +1371,6 @@ updateList() {
         `;
     }
 
-    bindAdotarFilters() {
-    const cepInput = document.getElementById('cep-input');
-    const cidadeInput = document.getElementById('cidade-input');
-    const searchBtn = document.getElementById('search-pets');
-
-    if (cepInput) {
-        cepInput.oninput = (e) => {
-            this.state.cep = e.target.value;
-        };
-    }
-
-    if (cidadeInput) {
-        cidadeInput.oninput = (e) => {
-            this.state.cidade = e.target.value;
-        };
-    }
-
-    if (searchBtn) {
-        searchBtn.onclick = () => {
-            this.filterPets();
-        };
-    }
-}
-
-
     renderLocais() {
         return `
             <div class="w-full animate-in">
@@ -1087,13 +1384,14 @@ updateList() {
                         <div id="map" class="map-container"></div>
                     </div>
                     <div class="space-y-6">
-                        ${APP_DATA.ongs.map(ong => `
-                            <div class="ong-card">
+                        ${APP_DATA.ongs.map((ong, index) => `
+                            <div class="ong-card" style="animation-delay: ${index * 0.1}s;">
                                 <div class="flex items-center gap-5 flex-col md:flex-row">
                                     <div class="ong-icon"><i class="fas fa-hands-helping"></i></div>
                                     <div class="flex-1">
                                         <h4 class="ong-name">${ong.nome}</h4>
-                                        <p class="text-gray-500 font-medium">${ong.endereco}</p>
+                                        <p class="text-gray-500 font-medium"><i class="fas fa-map-marker-alt"></i> ${ong.endereco}</p>
+                                        <p class="text-gray-400 text-sm"><i class="fas fa-phone"></i> ${ong.telefone}</p>
                                     </div>
                                 </div>
                                 <div class="text-center md:text-right">
@@ -1110,12 +1408,12 @@ updateList() {
 
     renderSobre() {
         return `
-            <div class="w-full max-w-5xl animate-in">
+            <div class="w-full max-w-5xl">
                 <!-- Seção principal: História -->
-                <div class="large-card mb-10">
+                <div class="large-card mb-10 animate-in">
                     <div class="flex justify-center mb-6">
-                        <div class="bg-gradient-to-r from-primary-blue to-primary-orange p-6 rounded-3xl text-white">
-                            <i class="fas fa-paw text-4xl"></i>
+                        <div class="hero-paw-icon">
+                            <i class="fas fa-paw"></i>
                         </div>
                     </div>
                     
@@ -1137,8 +1435,8 @@ updateList() {
                     <!-- Cards de missão e impacto -->
                     <div class="grid md:grid-2 gap-6 mt-12">
                         <div class="ong-card">
-                            <div class="bg-gradient-to-r from-primary-blue to-primary-orange p-4 rounded-2xl text-white">
-                                <i class="fas fa-bullseye text-2xl"></i>
+                            <div class="ong-icon" style="background: linear-gradient(135deg, var(--primary-blue), var(--primary-orange));">
+                                <i class="fas fa-bullseye"></i>
                             </div>
                             <div class="flex-1">
                                 <h4 class="subtitle">Missão</h4>
@@ -1149,8 +1447,8 @@ updateList() {
                         </div>
                         
                         <div class="ong-card">
-                            <div class="bg-gradient-to-r from-primary-pink to-primary-yellow p-4 rounded-2xl text-white">
-                                <i class="fas fa-heart text-2xl"></i>
+                            <div class="ong-icon" style="background: linear-gradient(135deg, var(--primary-pink), var(--primary-yellow));">
+                                <i class="fas fa-heart"></i>
                             </div>
                             <div class="flex-1">
                                 <h4 class="subtitle">Impacto</h4>
@@ -1163,15 +1461,15 @@ updateList() {
                 </div>
 
                 <!-- Seção: Fundadores -->
-                <div class="large-card">
+                <div class="large-card animate-in" style="animation-delay: 0.2s;">
                     <div class="flex items-center justify-center gap-3 mb-10">
                         <i class="fas fa-users text-3xl text-primary-blue"></i>
                         <h3 class="subtitle">Fundadores</h3>
                     </div>
 
                     <div class="grid md:grid-3 gap-8">
-                        ${APP_DATA.fundadores.map(fundador => `
-                            <div class="founder-card">
+                        ${APP_DATA.fundadores.map((fundador, index) => `
+                            <div class="founder-card" style="animation-delay: ${index * 0.1}s;">
                                 <div class="founder-avatar">
                                     ${fundador.nome.charAt(0)}
                                 </div>
@@ -1183,24 +1481,24 @@ updateList() {
                 </div>
 
                 <!-- Estatísticas -->
-                <div class="large-card mt-10">
+                <div class="large-card mt-10 animate-in" style="animation-delay: 0.3s;">
                     <h3 class="subtitle text-center mb-8">Nossos Números</h3>
                     <div class="grid md:grid-4 gap-6">
                         <div class="text-center">
-                            <div class="text-4xl font-bold text-primary-orange mb-2">${APP_DATA.pets.length}+</div>
+                            <div class="stat-number">${APP_DATA.pets.length}</div>
                             <p class="text-gray-600">Pets para Adoção</p>
                         </div>
                         <div class="text-center">
-                            <div class="text-4xl font-bold text-primary-blue mb-2">${APP_DATA.ongs.length}+</div>
+                            <div class="stat-number">${APP_DATA.ongs.length}</div>
                             <p class="text-gray-600">ONGs Parceiras</p>
                         </div>
                         <div class="text-center">
-                            <div class="text-4xl font-bold text-primary-pink mb-2">100%</div>
-                            <p class="text-gray-600">Gratuito</p>
+                            <div class="stat-number">100</div>
+                            <p class="text-gray-600">% Gratuito</p>
                         </div>
                         <div class="text-center">
-                            <div class="text-4xl font-bold text-primary-yellow mb-2">24/7</div>
-                            <p class="text-gray-600">Disponível</p>
+                            <div class="stat-number">24</div>
+                            <p class="text-gray-600">/7 Disponível</p>
                         </div>
                     </div>
                 </div>
@@ -1230,7 +1528,7 @@ updateList() {
                     </div>
                 ` : `
                     <div class="pets-grid">
-                        ${favoritePets.map(pet => this.renderPetCard(pet)).join('')}
+                        ${favoritePets.map((pet, index) => this.renderPetCard(pet, index)).join('')}
                     </div>
                     
                     <div class="text-center mt-8">

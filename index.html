@@ -4,18 +4,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PetMatch - Encontre seu novo melhor amigo</title>
-    <link rel="stylesheet" href="style.css">
+    <meta name="description" content="PetMatch - Conectando pets com deficiência a lares amorosos. Adote um pet especial e faça a diferença.">
+    <meta name="keywords" content="adoção de pets, pets com deficiência, adoção responsável, ONGs, animais">
+    <meta name="author" content="PetMatch">
+    <meta name="theme-color" content="#FF9C36">
+    
+    <link rel="icon" type="image/jpeg" href="logo_petmatch.jpeg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://unpkg.com">
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    
     <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="root">
-        <!-- Aplicação será renderizada aqui -->
-    </div>
+    <div id="root"></div>
     
-    <!-- Modal para detalhes do pet -->
-    <div id="pet-modal" class="modal" aria-hidden="true">
+    <div id="pet-modal" class="modal" aria-hidden="true" role="dialog">
         <div class="modal-content">
             <button class="modal-close" aria-label="Fechar modal">
                 <i class="fas fa-times"></i>
@@ -24,8 +32,7 @@
         </div>
     </div>
     
-    <!-- Modal de filtros -->
-    <div id="filter-modal" class="modal" aria-hidden="true">
+    <div id="filter-modal" class="modal" aria-hidden="true" role="dialog">
         <div class="modal-content filter-modal">
             <button class="modal-close" aria-label="Fechar modal">
                 <i class="fas fa-times"></i>
@@ -34,8 +41,7 @@
         </div>
     </div>
     
-    <!-- Modal de contato -->
-    <div id="contact-modal" class="modal" aria-hidden="true">
+    <div id="contact-modal" class="modal" aria-hidden="true" role="dialog">
         <div class="modal-content contact-modal">
             <button class="modal-close" aria-label="Fechar modal">
                 <i class="fas fa-times"></i>
@@ -44,8 +50,6 @@
         </div>
     </div>
 
-    <!-- Scripts -->
-    <script src="data.json"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="script.js"></script>
 </body>
