@@ -164,54 +164,26 @@
     }
   ],
   "fundadores": [
-  {
-    "id": 1,
-    "nome": "Ana Julia",
-    "cargo": "Fundadora",
-    "bio": "Dedicada à missão de transformar a vida dos animais e fortalecer a comunidade do PetMatch.",
-    "imagem": "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&auto=format&fit=crop"
-  },
-  {
-    "id": 2,
-    "nome": "Ana Clara",
-    "cargo": "Fundadora",
-    "bio": "Focada em inovação e no bem-estar animal dentro de todos os processos da organização.",
-    "imagem": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&auto=format&fit=crop"
-  },
-  {
-    "id": 3,
-    "nome": "Kaique Silva",
-    "cargo": "Fundador",
-    "bio": "Especialista em estratégia e apaixonado por criar conexões reais entre pets e novas famílias.",
-    "imagem": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&auto=format&fit=crop"
-  },
-  {
-    "id": 4,
-    "nome": "Kawany Barreto",
-    "cargo": "Fundadora",
-    "bio": "Trabalha para garantir que cada resgate tenha uma história de superação e final feliz.",
-    "imagem": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&auto=format&fit=crop"
-  },
-  {
-    "id": 5,
-    "nome": "Julia Barreto",
-    "cargo": "Fundadora",
-    "bio": "Responsável por ampliar o alcance do projeto e dar voz aos animais que mais precisam.",
-    "imagem": "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400&auto=format&fit=crop"
-  },
-  {
-    "id": 6,
-    "nome": "Pedro Arantes",
-    "cargo": "Fundador",
-    "bio": "Entusiasta da causa animal, focado na gestão e sustentabilidade das ações de resgate.",
-    "imagem": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&auto=format&fit=crop"
-  },
-  {
-      "id": 7,
-      "nome": "Geovanna Andrade",
-      "cargo": "Fundadora",
-      "bio": "Comprometida com a ética e o cuidado em todas as etapas de reabilitação dos pets.",
-      "imagem": "https://images.unsplash.com/photo-1554151228-14d9def656e4?w=400&auto=format&fit=crop"
+    {
+      "id": 1,
+      "nome": "Ana Silva",
+      "cargo": "Fundadora & Veterinária",
+      "bio": "Apaixonada por animais desde criança, Ana fundou o PetMatch para dar visibilidade a pets com deficiência.",
+      "imagem": "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&auto=format&fit=crop"
+    },
+    {
+      "id": 2,
+      "nome": "Ricardo Santos",
+      "cargo": "Co-fundador & Diretor de Resgate",
+      "bio": "Com mais de 10 anos de experiência em ONGs, Ricardo foca na logística de resgate e reabilitação.",
+      "imagem": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&auto=format&fit=crop"
+    },
+    {
+      "id": 3,
+      "nome": "Mariana Costa",
+      "cargo": "Diretora de Comunicação",
+      "bio": "Mariana utiliza o marketing para contar as histórias emocionantes de superação dos nossos pets.",
+      "imagem": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&auto=format&fit=crop"
     }
   ]
 }

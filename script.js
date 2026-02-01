@@ -1,29 +1,184 @@
-// Dados da aplicação (agora carregado do JSON externo)
+// Configuração da API baseada nas imagens fornecidas
+const API_CONFIG = {
+    publicKey: 'public_LqoBYnTCSQBYNGdC',
+    secretKey: 'secret_DAFSKHsF9yt3FjSM',
+    // Substitua pela URL real da sua API quando tiver
+    baseURL: 'https://api.petmatch.com/v1', 
+    jwtPublicKey: `-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqUIZJ5HrqPfrR+b1nwRb
+nVOzMzJX5LFdJJrU6sVRUnzRnBXP+ikdEUS8UpmVbRJDhXxMlRqwQgPCtsjt914k
+skuhAs5/78dk/OfCnRIT8BMMDumyEt52+6S2+kozSf5spf2vrPZCiADXXMUvpevo
+ulNtkUIYt1I4sMpw9/lw3l1RZkQ7HRwhVtk2WuhrSNghB6VAVsCm8gBMMlPbLgZGQ
+P0OcuEQaOQ5o7CbEiq5POx+EYwFL9guJ5thEKQgmn6ZdrcmV8UQ+n1KrB0h5CMwm
+9XUu1zoaLr8k3Z1M7Lsc+mmqt9LYpNyzyFFGxqn/5u3hsV9mpLhTUpOFLzWtKd5VV
+jQIDAQAB
+-----END PUBLIC KEY-----`
+};
+
+// Serviço de Autenticação
+class AuthService {
+    constructor() {
+        this.token = localStorage.getItem('petmatch_token');
+        this.user = JSON.parse(localStorage.getItem('petmatch_user') || 'null');
+    }
+
+    // Login com as credenciais e chaves da API
+    async login(email, password, nome = null) {
+        try {
+            // Simulação da chamada real à API (substitua pela URL real quando disponível)
+            // const response = await fetch(`${API_CONFIG.baseURL}/auth/login`, {
+            //     method: 'POST',
+            //     headers: {
+            //         'Content-Type': 'application/json',
+            //         'X-Public-Key': API_CONFIG.publicKey,
+            //         'X-Secret-Key': API_CONFIG.secretKey
+            //     },
+            //     body: JSON.stringify({
+            //         email,
+            //         password,
+            //         public_key: API_CONFIG.publicKey
+            //     })
+            // });
+
+            // Simulação temporária até integrar com backend real
+            await this.simulateAPICall(email, password, nome);
+            
+            return { success: true };
+        } catch (error) {
+            console.error('Erro de autenticação:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    // Simulação de chamada API (remover quando integrar backend real)
+    async simulateAPICall(email, password, nome) {
+        return new Promise((resolve, reject) => {
+            setTimeout(() => {
+                // Validação básica
+                if (!email || !password) {
+                    reject(new Error('Email e senha são obrigatórios'));
+                    return;
+                }
+                
+                if (password.length < 6) {
+                    reject(new Error('Senha deve ter no mínimo 6 caracteres'));
+                    return;
+                }
+
+                // Cria token JWT simulado (em produção, virá do servidor)
+                const payload = {
+                    email: email,
+                    nome: nome || email.split('@')[0],
+                    public_key: API_CONFIG.publicKey,
+                    iat: Date.now(),
+                    exp: Date.now() + (24 * 60 * 60 * 1000) // 24 horas
+                };
+                
+                const token = btoa(JSON.stringify(payload));
+                const userData = {
+                    email: email,
+                    nome: nome || email.split('@')[0],
+                    id: Math.random().toString(36).substr(2, 9)
+                };
+
+                this.setSession(token, userData);
+                resolve({ token, user: userData });
+            }, 1000); // Simula latência da rede
+        });
+    }
+
+    // Cadastro de novo usuário
+    async register(nome, email, password) {
+        try {
+            // Aqui faria a chamada real para a API de registro
+            // const response = await fetch(`${API_CONFIG.baseURL}/auth/register`, {
+            //     method: 'POST',
+            //     headers: {
+            //         'Content-Type': 'application/json',
+            //         'X-Public-Key': API_CONFIG.publicKey,
+            //         'X-Secret-Key': API_CONFIG.secretKey
+            //     },
+            //     body: JSON.stringify({ nome, email, cpf, password })
+            // });
+
+            // Simulação
+            return await this.simulateAPICall(email, password, nome);
+        } catch (error) {
+            return { success: false, error: error.message };
+        }
+    }
+
+    setSession(token, user) {
+        this.token = token;
+        this.user = user;
+        localStorage.setItem('petmatch_token', token);
+        localStorage.setItem('petmatch_user', JSON.stringify(user));
+    }
+
+    logout() {
+        this.token = null;
+        this.user = null;
+        localStorage.removeItem('petmatch_token');
+        localStorage.removeItem('petmatch_user');
+        window.location.href = '/';
+    }
+
+    isAuthenticated() {
+        if (!this.token) return false;
+        
+        try {
+            // Verifica se token não expirou
+            const payload = JSON.parse(atob(this.token));
+            return payload.exp > Date.now();
+        } catch {
+            return false;
+        }
+    }
+
+    getAuthHeaders() {
+        return {
+            'Authorization': `Bearer ${this.token}`,
+            'X-Public-Key': API_CONFIG.publicKey,
+            'Content-Type': 'application/json'
+        };
+    }
+
+    getUser() {
+        return this.user;
+    }
+}
+
+// Instância global do serviço de auth
+const authService = new AuthService();
+
+// Dados da aplicação
 let APP_DATA = {
     pets: [],
     ongs: [],
     fundadores: []
 };
 
-// Carregar dados do JSON
+// Verificar autenticação antes de carregar dados
 async function loadAppData() {
     try {
+        // Se estiver em rota protegida e não estiver autenticado, redireciona
+        const protectedRoutes = ['/home', '/adotar', '/locais', '/sobre', '/favoritos'];
+        const currentPath = window.location.pathname;
+        
+        if (protectedRoutes.includes(currentPath) && !authService.isAuthenticated()) {
+            window.history.pushState({}, '', '/');
+        }
+
         const response = await fetch('data.json');
         APP_DATA = await response.json();
     } catch (error) {
         console.error('Erro ao carregar dados:', error);
-        // Dados de fallback
-        APP_DATA = {
-            pets: [],
-            ongs: [],
-            fundadores: []
-        };
+        APP_DATA = { pets: [], ongs: [], fundadores: [] };
     }
 }
 
-// Utilitários de animação
+// Resto das utilidades de animação...
 const AnimationUtils = {
-    // Anima elementos quando entram na viewport
     observeElements: (selector, animationClass = 'animate-in') => {
         const observer = new IntersectionObserver((entries) => {
             entries.forEach((entry, index) => {
@@ -43,7 +198,6 @@ const AnimationUtils = {
         });
     },
 
-    // Adiciona efeito de ripple aos botões
     addRippleEffect: (button) => {
         button.addEventListener('click', function(e) {
             const ripple = document.createElement('span');
@@ -73,7 +227,6 @@ const AnimationUtils = {
         });
     },
 
-    // Anima contadores
     animateCounter: (element, target, duration = 2000) => {
         const start = 0;
         const increment = target / (duration / 16);
@@ -92,31 +245,6 @@ const AnimationUtils = {
         updateCounter();
     },
 
-    // Efeito de digitação
-    typewriterEffect: (element, text, speed = 50) => {
-        let i = 0;
-        element.textContent = '';
-        
-        const type = () => {
-            if (i < text.length) {
-                element.textContent += text.charAt(i);
-                i++;
-                setTimeout(type, speed);
-            }
-        };
-        
-        type();
-    },
-
-    // Shake animation para erros
-    shakeElement: (element) => {
-        element.style.animation = 'shake 0.5s ease';
-        setTimeout(() => {
-            element.style.animation = '';
-        }, 500);
-    },
-
-    // Confetti effect
     createConfetti: (x, y) => {
         const colors = ['#FF9C36', '#FFDE59', '#FFB4E2', '#1893F8', '#BE5C3D'];
         const confettiCount = 30;
@@ -150,7 +278,7 @@ const AnimationUtils = {
             let rotationSpeed = (Math.random() - 0.5) * 20;
             
             const animate = () => {
-                velY += 5; // gravity
+                velY += 5;
                 posX += velX * 0.016;
                 posY += velY * 0.016;
                 rotation += rotationSpeed;
@@ -172,24 +300,21 @@ const AnimationUtils = {
     }
 };
 
-// Adicionar keyframes para ripple e shake
+// Estilos adicionais para ripple
 const style = document.createElement('style');
 style.textContent = `
     @keyframes rippleEffect {
-        to {
-            transform: scale(2);
-            opacity: 0;
-        }
+        to { transform: scale(2); opacity: 0; }
     }
     @keyframes shake {
         0%, 100% { transform: translateX(0); }
-        10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
-        20%, 40%, 60%, 80% { transform: translateX(5px); }
+        25% { transform: translateX(-5px); }
+        75% { transform: translateX(5px); }
     }
 `;
 document.head.appendChild(style);
 
-// Componentes React-like em JavaScript puro
+// Classe principal do App
 class PetMatchApp {
     constructor() {
         this.currentPath = window.location.pathname || '/';
@@ -211,7 +336,9 @@ class PetMatchApp {
             },
             currentPage: 1,
             petsPerPage: 6,
-            isLoading: true
+            isLoading: true,
+            authError: null,
+            isAuthenticating: false
         };
         this.init();
     }
@@ -227,23 +354,19 @@ class PetMatchApp {
             isLoading: false 
         });
         
-        // Inicializar animações após renderização
         setTimeout(() => this.initAnimations(), 100);
     }
 
     initAnimations() {
-        // Observar elementos para animação de entrada
         AnimationUtils.observeElements('.pet-card', 'animate-in-scale');
         AnimationUtils.observeElements('.info-card', 'animate-in');
         AnimationUtils.observeElements('.ong-card', 'animate-slide');
         AnimationUtils.observeElements('.founder-card', 'animate-in-scale');
         
-        // Adicionar efeito ripple aos botões
         document.querySelectorAll('.btn').forEach(btn => {
             AnimationUtils.addRippleEffect(btn);
         });
         
-        // Animar contadores de estatísticas
         document.querySelectorAll('.stat-number').forEach(stat => {
             const value = parseInt(stat.textContent);
             if (!isNaN(value)) {
@@ -255,11 +378,11 @@ class PetMatchApp {
     setupRouting() {
         window.addEventListener('popstate', () => {
             this.currentPath = window.location.pathname;
+            this.checkAuth();
             this.render();
             setTimeout(() => this.initAnimations(), 100);
         });
 
-        // Intercepta clicks em links
         document.addEventListener('click', (e) => {
             const link = e.target.closest('a[data-route]');
             if (link) {
@@ -270,9 +393,25 @@ class PetMatchApp {
         });
     }
 
+    checkAuth() {
+        const protectedRoutes = ['/home', '/adotar', '/locais', '/sobre', '/favoritos'];
+        if (protectedRoutes.includes(this.currentPath) && !authService.isAuthenticated()) {
+            this.currentPath = '/';
+            window.history.pushState({}, '', '/');
+        }
+    }
+
     navigateTo(path) {
-        window.history.pushState({}, '', path);
-        this.currentPath = path;
+        const protectedRoutes = ['/home', '/adotar', '/locais', '/sobre', '/favoritos'];
+        
+        if (protectedRoutes.includes(path) && !authService.isAuthenticated()) {
+            this.currentPath = '/';
+            window.history.pushState({}, '', '/');
+        } else {
+            this.currentPath = path;
+            window.history.pushState({}, '', path);
+        }
+        
         this.render();
         setTimeout(() => this.initAnimations(), 100);
     }
@@ -283,11 +422,10 @@ class PetMatchApp {
     }
 
     setupEventListeners() {
-        // Delegar eventos
-        document.addEventListener('submit', (e) => {
+        document.addEventListener('submit', async (e) => {
             e.preventDefault();
             if (e.target.id === 'auth-form') {
-                this.handleAuthSubmit();
+                await this.handleAuthSubmit(e.target);
             }
             if (e.target.id === 'contact-form') {
                 this.handleContactSubmit(e);
@@ -295,22 +433,21 @@ class PetMatchApp {
         });
 
         document.addEventListener('click', (e) => {
-            // Toggle auth
             if (e.target.closest('#toggle-auth')) {
-                this.setState({ isLogin: !this.state.isLogin });
+                this.setState({ 
+                    isLogin: !this.state.isLogin, 
+                    authError: null 
+                });
             }
 
-            // Buscar pets
             if (e.target.closest('#search-pets')) {
                 this.filterPets();
             }
 
-            // Toggle dark mode
             if (e.target.closest('#theme-toggle')) {
                 this.toggleDarkMode();
             }
 
-            // Favoritar pet
             if (e.target.closest('.favorite-btn')) {
                 const btn = e.target.closest('.favorite-btn');
                 const petId = parseInt(btn.dataset.petId);
@@ -319,47 +456,44 @@ class PetMatchApp {
                 this.toggleFavorite(petId);
             }
 
-            // Abrir modal de pet
             if (e.target.closest('.pet-detail-btn')) {
                 const petId = parseInt(e.target.closest('.pet-detail-btn').dataset.petId);
                 this.showPetModal(petId);
             }
 
-            // Fechar modal
             if (e.target.closest('.modal-close') || e.target.closest('.modal')) {
                 if (e.target.classList.contains('modal') || e.target.closest('.modal-close')) {
                     this.closeModal();
                 }
             }
 
-            // Abrir filtros
             if (e.target.closest('#open-filters')) {
                 this.showFilterModal();
             }
 
-            // Aplicar filtros
             if (e.target.closest('#apply-filters')) {
                 this.applyFilters();
             }
 
-            // Limpar filtros
             if (e.target.closest('#clear-filters')) {
                 this.clearFilters();
             }
 
-            // Abrir contato
             if (e.target.closest('.contact-btn')) {
                 const ongId = parseInt(e.target.closest('.contact-btn').dataset.ongId);
                 this.showContactModal(ongId);
             }
 
-            // Paginação
             if (e.target.closest('.pagination-btn')) {
                 const btn = e.target.closest('.pagination-btn');
                 if (!btn.disabled) {
                     const page = parseInt(btn.dataset.page);
                     this.goToPage(page);
                 }
+            }
+
+            if (e.target.closest('#logout-btn')) {
+                authService.logout();
             }
         });
 
@@ -394,16 +528,46 @@ class PetMatchApp {
         });
     }
 
-    handleAuthSubmit() {
-        // Animação de transição
-        const card = document.querySelector('.card');
-        if (card) {
-            card.style.animation = 'fadeInScale 0.5s ease reverse';
-            setTimeout(() => {
-                this.navigateTo('/home');
-            }, 300);
+    async handleAuthSubmit(form) {
+        this.setState({ isAuthenticating: true, authError: null });
+        
+        const formData = new FormData(form);
+        const email = formData.get('email') || form.querySelector('input[type="email"]').value;
+        const password = formData.get('password') || form.querySelector('input[type="password"]').value;
+        const nome = form.querySelector('input[type="text"]')?.value;
+        
+        let result;
+        
+        if (this.state.isLogin) {
+            result = await authService.login(email, password);
         } else {
-            this.navigateTo('/home');
+            result = await authService.register(nome, email, null, password);
+        }
+        
+        if (result.success) {
+            const card = document.querySelector('.card');
+            if (card) {
+                card.style.animation = 'fadeInScale 0.5s ease reverse';
+                setTimeout(() => {
+                    this.navigateTo('/home');
+                }, 300);
+            } else {
+                this.navigateTo('/home');
+            }
+        } else {
+            this.setState({ 
+                authError: result.error || 'Erro na autenticação',
+                isAuthenticating: false 
+            });
+            
+            // Shake animation no formulário
+            const card = document.querySelector('.card');
+            if (card) {
+                card.style.animation = 'shake 0.5s ease';
+                setTimeout(() => {
+                    card.style.animation = '';
+                }, 500);
+            }
         }
     }
 
@@ -412,15 +576,12 @@ class PetMatchApp {
         const form = e.target;
         const submitBtn = form.querySelector('button[type="submit"]');
         
-        // Animação de loading no botão
         const originalText = submitBtn.innerHTML;
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
         submitBtn.disabled = true;
         
-        // Simular envio
         await new Promise(resolve => setTimeout(resolve, 1500));
         
-        // Confetti effect
         const rect = submitBtn.getBoundingClientRect();
         AnimationUtils.createConfetti(rect.left + rect.width/2, rect.top + rect.height/2);
         
@@ -439,10 +600,8 @@ class PetMatchApp {
         localStorage.setItem('petmatch_darkmode', newDarkMode);
         document.body.classList.toggle('dark-mode', newDarkMode);
         
-        // Animação de transição
         document.body.style.transition = 'background-color 0.5s ease, color 0.5s ease';
         
-        // Atualizar ícone com animação
         const themeIcon = document.querySelector('#theme-toggle i');
         if (themeIcon) {
             themeIcon.style.transform = 'rotate(360deg) scale(0)';
@@ -466,14 +625,12 @@ class PetMatchApp {
         this.setState({ favorites });
         localStorage.setItem('petmatch_favorites', JSON.stringify(favorites));
         
-        // Feedback visual
         const btn = document.querySelector(`.favorite-btn[data-pet-id="${petId}"]`);
         if (btn) {
             btn.classList.toggle('active');
             const icon = btn.querySelector('i');
             icon.className = favorites.includes(petId) ? 'fas fa-heart' : 'far fa-heart';
             
-            // Animação extra
             btn.style.transform = 'scale(1.3)';
             setTimeout(() => {
                 btn.style.transform = '';
@@ -526,7 +683,6 @@ class PetMatchApp {
         });
         this.closeModal();
         
-        // Animação nos resultados
         setTimeout(() => {
             AnimationUtils.observeElements('.pet-card', 'animate-in-scale');
         }, 100);
@@ -551,7 +707,6 @@ class PetMatchApp {
         this.setState({ currentPage: page });
         window.scrollTo({ top: 0, behavior: 'smooth' });
         
-        // Animação nos cards
         setTimeout(() => {
             AnimationUtils.observeElements('.pet-card', 'animate-in-scale');
         }, 100);
@@ -603,7 +758,6 @@ class PetMatchApp {
             </div>
         `;
         
-        // Adicionar evento ao botão de adoção
         const adoptBtn = modalBody.querySelector('.adopt-btn');
         if (adoptBtn) {
             adoptBtn.addEventListener('click', (e) => {
@@ -623,7 +777,6 @@ class PetMatchApp {
         modal.classList.add('active');
         document.body.style.overflow = 'hidden';
         
-        // Animação de entrada do modal
         setTimeout(() => {
             const content = modal.querySelector('.modal-content');
             if (content) {
@@ -637,7 +790,6 @@ class PetMatchApp {
         const modal = document.getElementById('filter-modal');
         const modalBody = document.getElementById('filter-modal-body');
         
-        // Extrair opções únicas para filtros
         const deficiencias = [...new Set(APP_DATA.pets.map(p => p.deficiencia))];
         const tipos = [...new Set(APP_DATA.pets.map(p => p.tipo))];
         const portes = [...new Set(APP_DATA.pets.map(p => p.porte))];
@@ -720,6 +872,8 @@ class PetMatchApp {
         const modal = document.getElementById('contact-modal');
         const modalBody = document.getElementById('contact-modal-body');
         
+        const user = authService.getUser();
+        
         modalBody.innerHTML = `
             <h3 class="subtitle mb-4">Contato: ${ong.nome}</h3>
             
@@ -732,12 +886,12 @@ class PetMatchApp {
             <form id="contact-form" class="space-y-4">
                 <div>
                     <label class="filter-label">Seu Nome</label>
-                    <input type="text" name="nome" class="form-input" required placeholder="Digite seu nome">
+                    <input type="text" name="nome" class="form-input" required placeholder="Digite seu nome" value="${user?.nome || ''}">
                 </div>
                 
                 <div>
                     <label class="filter-label">Seu Email</label>
-                    <input type="email" name="email" class="form-input" required placeholder="seu@email.com">
+                    <input type="email" name="email" class="form-input" required placeholder="seu@email.com" value="${user?.email || ''}">
                 </div>
                 
                 <div>
@@ -782,14 +936,12 @@ class PetMatchApp {
         const mapContainer = document.getElementById('map');
         if (!mapContainer) return;
         
-        // Inicializar mapa (usando Leaflet)
         const map = L.map('map').setView([-23.550, -46.633], 12);
         
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors'
         }).addTo(map);
         
-        // Adicionar marcadores das ONGs com animação
         APP_DATA.ongs.forEach((ong, index) => {
             if (ong.lat && ong.lng) {
                 setTimeout(() => {
@@ -804,11 +956,6 @@ class PetMatchApp {
                             </button>
                         </div>
                     `);
-                    
-                    // Animação de bounce no marcador
-                    marker.on('add', function() {
-                        this._icon.style.animation = 'bounce 0.5s ease';
-                    });
                 }, index * 200);
             }
         });
@@ -818,7 +965,6 @@ class PetMatchApp {
         const { cep, cidade } = this.state;
         let filteredPets = APP_DATA.pets;
 
-        // Filtro por CEP
         if (cep && cep.length >= 2) {
             const prefix = cep.substring(0, 2);
             if (['01', '02', '03', '04', '05'].includes(prefix)) {
@@ -832,20 +978,17 @@ class PetMatchApp {
             }
         }
 
-        // Filtro por cidade
         if (cidade) {
             filteredPets = filteredPets.filter(p =>
                 p.cidade.toLowerCase().includes(cidade.toLowerCase())
             );
         }
 
-        // Atualiza o estado e renderiza a lista filtrada
         this.setState({ 
             filteredPets,
             currentPage: 1 
         });
         
-        // Animação nos resultados
         setTimeout(() => {
             AnimationUtils.observeElements('.pet-card', 'animate-in-scale');
         }, 100);
@@ -867,7 +1010,6 @@ class PetMatchApp {
             </div>
         `;
 
-        // Re-vincula eventos específicos da página após o innerHTML
         if (this.currentPath === '/adotar') {
             this.bindAdotarFilters();
         }
@@ -876,7 +1018,6 @@ class PetMatchApp {
             setTimeout(() => this.initMap(), 100);
         }
         
-        // Adicionar efeitos aos botões após renderização
         setTimeout(() => {
             document.querySelectorAll('.btn').forEach(btn => {
                 AnimationUtils.addRippleEffect(btn);
@@ -891,11 +1032,6 @@ class PetMatchApp {
         const clearBtn = document.getElementById('clear-filters');
 
         if (cepInput) {
-            cepInput.addEventListener('input', (e) => {
-                this.state.cep = e.target.value;
-            });
-            
-            // Máscara de CEP
             cepInput.addEventListener('input', (e) => {
                 let value = e.target.value.replace(/\D/g, '');
                 if (value.length > 5) {
@@ -914,10 +1050,10 @@ class PetMatchApp {
 
         if (searchBtn) {
             searchBtn.addEventListener('click', () => {
-                // Animação no botão
                 searchBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Buscando...';
                 setTimeout(() => {
                     this.filterPets();
+                    searchBtn.innerHTML = '<i class="fas fa-search"></i> Buscar';
                 }, 500);
             });
         }
@@ -934,12 +1070,6 @@ class PetMatchApp {
         }
     }
 
-    updateList() {
-        const content = document.getElementById('dynamic-content');
-        if (!content) return;
-        content.innerHTML = this.renderContent();
-    }
-
     renderLoading() {
         return `
             <div class="loading">
@@ -952,6 +1082,7 @@ class PetMatchApp {
     renderHeader() {
         const isAuthPage = this.currentPath === '/';
         const isActive = (path) => this.currentPath === path;
+        const user = authService.getUser();
         
         return `
             <header class="app-header">
@@ -962,7 +1093,7 @@ class PetMatchApp {
                     <span class="logo-text">PetMatch</span>
                 </a>
 
-                ${!isAuthPage ? `
+                ${!isAuthPage && authService.isAuthenticated() ? `
                     <div class="nav-container">
                         <nav class="nav-menu">
                             <a href="/home" class="nav-link ${isActive('/home') ? 'active' : ''}" data-route>
@@ -987,9 +1118,17 @@ class PetMatchApp {
                             </a>
                         </nav>
                         
-                        <button id="theme-toggle" class="theme-toggle" aria-label="Alternar tema">
-                            <i class="fas ${this.state.darkMode ? 'fa-sun' : 'fa-moon'}"></i>
-                        </button>
+                        <div class="user-menu" style="display: flex; align-items: center; gap: 1rem; margin-left: 1rem;">
+                            <span style="color: white; font-weight: 600; font-size: 0.9rem;">
+                                <i class="fas fa-user"></i> ${user?.nome || 'Usuário'}
+                            </span>
+                            <button id="logout-btn" class="btn btn-small" style="background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3);">
+                                <i class="fas fa-sign-out-alt"></i> Sair
+                            </button>
+                            <button id="theme-toggle" class="theme-toggle" aria-label="Alternar tema">
+                                <i class="fas ${this.state.darkMode ? 'fa-sun' : 'fa-moon'}"></i>
+                            </button>
+                        </div>
                     </div>
                 ` : ''}
             </header>
@@ -1052,64 +1191,76 @@ class PetMatchApp {
             case '/':
                 return this.renderAuth();
             case '/home':
-                return this.renderHome();
+                return authService.isAuthenticated() ? this.renderHome() : this.renderAuth();
             case '/adotar':
-                return this.renderAdotar();
+                return authService.isAuthenticated() ? this.renderAdotar() : this.renderAuth();
             case '/locais':
-                return this.renderLocais();
+                return authService.isAuthenticated() ? this.renderLocais() : this.renderAuth();
             case '/sobre':
-                return this.renderSobre();
+                return authService.isAuthenticated() ? this.renderSobre() : this.renderAuth();
             case '/favoritos':
-                return this.renderFavoritos();
+                return authService.isAuthenticated() ? this.renderFavoritos() : this.renderAuth();
             default:
-                return this.renderHome();
+                return authService.isAuthenticated() ? this.renderHome() : this.renderAuth();
         }
     }
 
     renderAuth() {
-        const { isLogin } = this.state;
+        const { isLogin, authError, isAuthenticating } = this.state;
         
         return `
             <div class="card animate-in">
-                <h2 class="title">${isLogin ? 'Bem-vindo ao PetMatch!' : 'Crie sua conta'}</h2>
+                <h2 class="title" style="font-size: 2rem; margin-bottom: 0.5rem;">
+                    ${isLogin ? 'Bem-vindo ao PetMatch!' : 'Crie sua conta'}
+                </h2>
+                <p style="text-align: center; color: var(--neutral-gray-500); margin-bottom: 1.5rem; font-size: 0.95rem;">
+                    ${isLogin ? 'Entre para continuar' : 'Preencha seus dados'}
+                </p>
+                
+                ${authError ? `
+                    <div style="background: #FEE2E2; border-left: 4px solid #EF4444; padding: 1rem; margin-bottom: 1rem; border-radius: 8px; color: #DC2626; font-size: 0.9rem;">
+                        <i class="fas fa-exclamation-circle"></i> ${authError}
+                    </div>
+                ` : ''}
                 
                 <form id="auth-form" class="space-y-4">
                     ${!isLogin ? `
-                        <input type="text" placeholder="Nome Completo" class="form-input" required />
+                        <input type="text" name="nome" placeholder="Nome Completo" class="form-input" required />
                     ` : ''}
                     
-                    <input type="email" placeholder="E-mail" class="form-input" required />
+                    <input type="email" name="email" placeholder="E-mail" class="form-input" required />
                     
-                    ${!isLogin ? `
-                        <input type="text" placeholder="CPF" class="form-input" required />
-                    ` : ''}
+                    <input type="password" name="password" placeholder="Senha" class="form-input" required minlength="6" />
                     
-                    <input type="password" placeholder="Senha" class="form-input" required />
-                    
-                    <button type="submit" class="btn btn-primary w-full">
-                        ${isLogin ? '<i class="fas fa-sign-in-alt"></i> Entrar' : '<i class="fas fa-user-plus"></i> Cadastrar'}
+                    <button type="submit" class="btn btn-primary w-full" ${isAuthenticating ? 'disabled' : ''} style="${isAuthenticating ? 'opacity: 0.7; cursor: not-allowed;' : ''}">
+                        ${isAuthenticating 
+                            ? '<i class="fas fa-spinner fa-spin"></i> Aguarde...' 
+                            : (isLogin ? '<i class="fas fa-sign-in-alt"></i> Entrar' : '<i class="fas fa-user-plus"></i> Cadastrar')
+                        }
                     </button>
                 </form>
 
-                <button id="toggle-auth" class="w-full mt-4 text-center font-bold py-2 transition-all cursor-pointer auth-toggle">
+                <button id="toggle-auth" class="w-full mt-4 text-center font-bold py-2 transition-all cursor-pointer auth-toggle" style="background: transparent; border: none; color: var(--primary-blue);">
                     ${isLogin ? 'Não tem conta? Cadastre-se aqui' : 'Já tem conta? Faça Login'}
                 </button>
+                
+                <div style="margin-top: 2rem; text-align: center; font-size: 0.75rem; color: var(--neutral-gray-400);">
+                    <i class="fas fa-shield-alt"></i> API Key: ${API_CONFIG.publicKey.substring(0, 12)}...
+                </div>
             </div>
         `;
     }
 
     renderHome() {
-        // Pets vistos recentemente
         const recentlyViewedPets = APP_DATA.pets.filter(pet => 
             this.state.recentlyViewed.includes(pet.id)
         ).slice(0, 3);
         
-        // Alguns pets para mostrar na home
         const featuredPets = APP_DATA.pets.slice(0, 3);
+        const user = authService.getUser();
         
         return `
             <div class="w-full space-y-10">
-                <!-- Hero Section -->
                 <div class="hero-section animate-in">
                     <div class="hero-content">
                         <div class="flex justify-center mb-6">
@@ -1119,8 +1270,11 @@ class PetMatchApp {
                         </div>
                         
                         <h1 class="hero-title text-center">
-                            Encontre seu novo melhor amigo!
+                            Olá, ${user?.nome || 'amigo'}! 👋
                         </h1>
+                        <h2 class="hero-title text-center" style="font-size: 2rem; margin-top: 0.5rem;">
+                            Encontre seu novo melhor amigo!
+                        </h2>
                         <p class="hero-subtitle text-center mx-auto">
                             Milhares de pets com deficiência estão esperando por um lar cheio de amor. 
                             Faça a diferença na vida de um animal especial hoje!
@@ -1141,7 +1295,6 @@ class PetMatchApp {
                     <div class="decoration-circle decoration-3"></div>
                 </div>
 
-                <!-- Pets em Destaque -->
                 <div class="animate-in" style="animation-delay: 0.2s;">
                     <h2 class="subtitle mb-6 text-center">Pets Disponíveis</h2>
                     <div class="pets-grid">
@@ -1154,7 +1307,6 @@ class PetMatchApp {
                     </div>
                 </div>
 
-                <!-- Info Cards -->
                 <div class="grid md:grid-3 gap-6">
                     <div class="info-card" style="animation-delay: 0.1s;">
                         <div class="info-icon">
@@ -1187,7 +1339,6 @@ class PetMatchApp {
                     </div>
                 </div>
 
-                <!-- Pets Vistos Recentemente -->
                 ${recentlyViewedPets.length > 0 ? `
                     <div class="mt-10 animate-in">
                         <h2 class="subtitle mb-6 text-center">Vistos Recentemente</h2>
@@ -1197,7 +1348,6 @@ class PetMatchApp {
                     </div>
                 ` : ''}
 
-                <!-- Call to Action -->
                 <div class="text-center py-10 animate-in" style="background: linear-gradient(135deg, rgba(255,156,54,0.1), rgba(255,180,226,0.1)); border-radius: var(--radius-xl); padding: 3rem;">
                     <h3 class="text-3xl font-bold text-gray-800 mb-4">
                         Pronto para mudar uma vida?
@@ -1258,7 +1408,6 @@ class PetMatchApp {
     renderAdotar() {
         const { filteredPets, currentPage, petsPerPage } = this.state;
         
-        // Paginação
         const startIndex = (currentPage - 1) * petsPerPage;
         const endIndex = startIndex + petsPerPage;
         const paginatedPets = filteredPets.slice(startIndex, endIndex);
@@ -1266,7 +1415,6 @@ class PetMatchApp {
         
         return `
             <div class="w-full animate-in">
-                <!-- Filtros -->
                 <div class="filter-section">
                     <h3 class="subtitle mb-4">Encontre seu pet ideal</h3>
                     
@@ -1313,7 +1461,6 @@ class PetMatchApp {
                     </div>
                 </div>
 
-                <!-- Lista de Pets -->
                 ${filteredPets.length === 0 ? `
                     <div class="empty-state">
                         <div class="empty-state-icon">
@@ -1331,7 +1478,6 @@ class PetMatchApp {
                     </div>
                 `}
 
-                <!-- Paginação -->
                 ${totalPages > 1 ? `
                     <div class="pagination">
                         <button class="pagination-btn ${currentPage === 1 ? 'disabled' : ''}" 
@@ -1409,7 +1555,6 @@ class PetMatchApp {
     renderSobre() {
         return `
             <div class="w-full max-w-5xl">
-                <!-- Seção principal: História -->
                 <div class="large-card mb-10 animate-in">
                     <div class="flex justify-center mb-6">
                         <div class="hero-paw-icon">
@@ -1432,7 +1577,6 @@ class PetMatchApp {
                         </p>
                     </div>
 
-                    <!-- Cards de missão e impacto -->
                     <div class="grid md:grid-2 gap-6 mt-12">
                         <div class="ong-card">
                             <div class="ong-icon" style="background: linear-gradient(135deg, var(--primary-blue), var(--primary-orange));">
@@ -1460,7 +1604,6 @@ class PetMatchApp {
                     </div>
                 </div>
 
-                <!-- Seção: Fundadores -->
                 <div class="large-card animate-in" style="animation-delay: 0.2s;">
                     <div class="flex items-center justify-center gap-3 mb-10">
                         <i class="fas fa-users text-3xl text-primary-blue"></i>
@@ -1480,7 +1623,6 @@ class PetMatchApp {
                     </div>
                 </div>
 
-                <!-- Estatísticas -->
                 <div class="large-card mt-10 animate-in" style="animation-delay: 0.3s;">
                     <h3 class="subtitle text-center mb-8">Nossos Números</h3>
                     <div class="grid md:grid-4 gap-6">
@@ -1542,7 +1684,7 @@ class PetMatchApp {
     }
 }
 
-// Inicializar a aplicação quando o DOM estiver pronto
+// Inicializar aplicação
 document.addEventListener('DOMContentLoaded', () => {
     new PetMatchApp();
 });
