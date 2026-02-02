@@ -14,6 +14,28 @@ jQIDAQAB
 -----END PUBLIC KEY-----`
 };
 
+// Detectar a página atual baseada no nome do arquivo ou URL
+function getCurrentPage() {
+    const path = window.location.pathname;
+    const filename = path.substring(path.lastIndexOf('/') + 1) || 'index.html';
+
+    if (filename === '' || filename === 'index.html' || filename === 'PetMatch' || path.endsWith('/PetMatch/')) {
+        return 'home';
+    } else if (filename.includes('adotar')) {
+        return 'adotar';
+    } else if (filename.includes('locais')) {
+        return 'locais';
+    } else if (filename.includes('sobre')) {
+        return 'sobre';
+    } else if (filename.includes('favoritos')) {
+        return 'favoritos';
+    }
+    return 'home';
+}
+
+// Flag para evitar re-renderização durante logout
+let isLoggingOut = false;
+
 // Serviço de Autenticação (mantido original)
 class AuthService {
     constructor() {
@@ -38,7 +60,7 @@ class AuthService {
                     reject(new Error('Email e senha são obrigatórios'));
                     return;
                 }
-                
+
                 if (password.length < 6) {
                     reject(new Error('Senha deve ter no mínimo 6 caracteres'));
                     return;
@@ -51,7 +73,7 @@ class AuthService {
                     iat: Date.now(),
                     exp: Date.now() + (24 * 60 * 60 * 1000)
                 };
-                
+
                 const token = btoa(JSON.stringify(payload));
                 const userData = {
                     email: email,
@@ -81,16 +103,22 @@ class AuthService {
     }
 
     logout() {
+        // Set flag to prevent re-rendering
+        isLoggingOut = true;
+
+        // Clear data
         this.token = null;
         this.user = null;
         localStorage.removeItem('petmatch_token');
         localStorage.removeItem('petmatch_user');
-        window.location.href = '/';
+
+        // Redirect immediately using replace to avoid history entry
+        window.location.replace('./index.html');
     }
 
     isAuthenticated() {
         if (!this.token) return false;
-        
+
         try {
             const payload = JSON.parse(atob(this.token));
             return payload.exp > Date.now();
@@ -196,16 +224,16 @@ class NotificationService {
 
     renderDropdown() {
         const unreadCount = this.getUnreadCount();
-        
+
         return `
             <div class="notification-header">
                 <strong>Notificações</strong>
-                ${unreadCount > 0 ? `<button onclick="notificationService.markAllAsRead(); app.render();" style="background:none;border:none;color:var(--primary-blue);cursor:pointer;font-size:0.875rem;">Marcar todas como lidas</button>` : ''}
+                ${unreadCount > 0 ? `<button onclick="notificationService.markAllAsRead(); if(!isLoggingOut) app.render();" style="background:none;border:none;color:var(--primary-blue);cursor:pointer;font-size:0.875rem;">Marcar todas como lidas</button>` : ''}
             </div>
             <ul class="notification-list">
                 ${this.notifications.length === 0 ? '<li style="padding:2rem;text-align:center;color:var(--neutral-gray-500);">Nenhuma notificação</li>' : ''}
                 ${this.notifications.map(n => `
-                    <li class="notification-item ${n.read ? '' : 'unread'}" onclick="notificationService.markAsRead(${n.id}); app.render();">
+                    <li class="notification-item ${n.read ? '' : 'unread'}" onclick="notificationService.markAsRead(${n.id}); if(!isLoggingOut) app.render();">
                         <div class="notification-icon ${n.type}">
                             <i class="fas ${n.icon || 'fa-bell'}"></i>
                         </div>
@@ -268,15 +296,15 @@ class ChatService {
         const input = document.getElementById('chat-input');
         const sendBtn = document.getElementById('chat-send');
         const headerName = document.getElementById('chat-ong-name');
-        
+
         headerName.textContent = ongName;
         container.classList.remove('hidden');
-        
+
         // Enable inputs
         input.disabled = false;
         sendBtn.disabled = false;
         input.focus();
-        
+
         // Load messages
         const messages = this.loadMessages(ongName);
         if (messages.length === 0) {
@@ -287,7 +315,7 @@ class ChatService {
                 this.renderMessages(ongName);
             }, 500);
         }
-        
+
         this.renderMessages(ongName);
         this.updateBadge();
     }
@@ -295,30 +323,30 @@ class ChatService {
     renderMessages(ongName) {
         const messagesDiv = document.getElementById('chat-messages');
         const messages = this.loadMessages(ongName);
-        
+
         messagesDiv.innerHTML = messages.map(m => `
             <div class="message ${m.isUser ? 'sent' : 'received'}">
                 <div>${m.text}</div>
                 <div class="message-time">${m.time}</div>
             </div>
         `).join('');
-        
+
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }
 
     sendMessage(text) {
         if (!this.currentOng || !text.trim()) return;
-        
+
         this.saveMessage(this.currentOng, text, true);
         this.renderMessages(this.currentOng);
-        
+
         // Simulate response
         setTimeout(() => {
             const responses = this.simulatedResponses[this.currentOng] || ['Entendi!', 'Muito interessante!', 'Podemos agendar uma visita se quiser.'];
             const randomResponse = responses[Math.floor(Math.random() * responses.length)];
             this.saveMessage(this.currentOng, randomResponse, false);
             this.renderMessages(this.currentOng);
-            
+
             // Show notification if chat closed
             const container = document.getElementById('chat-container');
             if (container.classList.contains('hidden')) {
@@ -437,7 +465,7 @@ const AnimationUtils = {
             const size = Math.max(rect.width, rect.height);
             const x = e.clientX - rect.left - size / 2;
             const y = e.clientY - rect.top - size / 2;
-            
+
             ripple.style.cssText = `
                 position: absolute;
                 width: ${size}px;
@@ -450,11 +478,11 @@ const AnimationUtils = {
                 animation: rippleEffect 0.6s ease-out;
                 pointer-events: none;
             `;
-            
+
             this.style.position = 'relative';
             this.style.overflow = 'hidden';
             this.appendChild(ripple);
-            
+
             setTimeout(() => ripple.remove(), 600);
         });
     },
@@ -463,7 +491,7 @@ const AnimationUtils = {
         const start = 0;
         const increment = target / (duration / 16);
         let current = start;
-        
+
         const updateCounter = () => {
             current += increment;
             if (current < target) {
@@ -473,14 +501,14 @@ const AnimationUtils = {
                 element.textContent = target;
             }
         };
-        
+
         updateCounter();
     },
 
     createConfetti: (x, y) => {
         const colors = ['#FF9C36', '#FFDE59', '#FFB4E2', '#1893F8', '#BE5C3D'];
         const confettiCount = 30;
-        
+
         for (let i = 0; i < confettiCount; i++) {
             const confetti = document.createElement('div');
             confetti.style.cssText = `
@@ -494,38 +522,38 @@ const AnimationUtils = {
                 pointer-events: none;
                 z-index: 9999;
             `;
-            
+
             document.body.appendChild(confetti);
-            
+
             const angle = (Math.PI * 2 * i) / confettiCount;
             const velocity = 100 + Math.random() * 100;
             const vx = Math.cos(angle) * velocity;
             const vy = Math.sin(angle) * velocity - 100;
-            
+
             let posX = x;
             let posY = y;
             let velX = vx;
             let velY = vy;
             let rotation = 0;
-            
+
             const animate = () => {
                 velY += 5;
                 posX += velX * 0.016;
                 posY += velY * 0.016;
                 rotation += 5;
-                
+
                 confetti.style.left = posX + 'px';
                 confetti.style.top = posY + 'px';
                 confetti.style.transform = `rotate(${rotation}deg)`;
                 confetti.style.opacity = Math.max(0, 1 - (posY - y) / 500);
-                
+
                 if (posY < window.innerHeight + 100 && confetti.style.opacity > 0) {
                     requestAnimationFrame(animate);
                 } else {
                     confetti.remove();
                 }
             };
-            
+
             requestAnimationFrame(animate);
         }
     }
@@ -533,17 +561,22 @@ const AnimationUtils = {
 
 // Toast notification helper
 function showToast(title, message, type = 'success') {
+    // Don't show toast if logging out
+    if (isLoggingOut) return;
+
     const container = document.getElementById('toast-container');
+    if (!container) return;
+
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
-    
+
     const iconMap = {
         success: 'fa-check-circle',
         error: 'fa-exclamation-circle',
         warning: 'fa-exclamation-triangle',
         info: 'fa-info-circle'
     };
-    
+
     toast.innerHTML = `
         <i class="fas ${iconMap[type]} toast-icon"></i>
         <div class="toast-content">
@@ -554,9 +587,9 @@ function showToast(title, message, type = 'success') {
             <i class="fas fa-times"></i>
         </button>
     `;
-    
+
     container.appendChild(toast);
-    
+
     setTimeout(() => {
         toast.style.opacity = '0';
         toast.style.transform = 'translateX(100%)';
@@ -580,16 +613,19 @@ let APP_DATA = {
 // Verificar autenticação antes de carregar dados
 async function loadAppData() {
     try {
-        const protectedRoutes = ['/home', '/adotar', '/locais', '/sobre', '/favoritos'];
-        const currentPath = window.location.pathname;
-        
-        if (protectedRoutes.includes(currentPath) && !authService.isAuthenticated()) {
-            window.history.pushState({}, '', '/');
+        // Verificar autenticação para páginas protegidas
+        const currentPage = getCurrentPage();
+        const protectedPages = ['home', 'adotar', 'locais', 'sobre', 'favoritos'];
+
+        if (protectedPages.includes(currentPage) && !authService.isAuthenticated()) {
+            // Redirecionar para login
+            window.location.href = './index.html';
+            return;
         }
 
         const response = await fetch('data.json');
         APP_DATA = await response.json();
-        
+
         // Load geolocation if authenticated
         if (authService.isAuthenticated()) {
             geoService.loadStoredLocation();
@@ -621,7 +657,7 @@ function renderSkeletonGrid(count = 6) {
 // Classe principal do App (revisada e expandida)
 class PetMatchApp {
     constructor() {
-        this.currentPath = window.location.pathname || '/';
+        this.currentPage = getCurrentPage();
         this.state = {
             isLogin: true,
             cep: '',
@@ -657,7 +693,7 @@ class PetMatchApp {
         this.render();
         this.setupEventListeners();
         this.setupChatListeners();
-        
+
         // Simulate loading with skeleton
         setTimeout(() => {
             this.setState({ 
@@ -668,10 +704,15 @@ class PetMatchApp {
             this.initAnimations();
             notificationService.updateBadge();
             chatService.updateBadge();
-            
+
             // Request geolocation on first visit
             if (authService.isAuthenticated() && !geoService.userLocation) {
                 this.requestGeolocation();
+            }
+
+            // Inicializar mapa se estiver na página de locais
+            if (this.currentPage === 'locais') {
+                setTimeout(() => this.initMap(), 100);
             }
         }, 800);
     }
@@ -681,7 +722,7 @@ class PetMatchApp {
             showToast('Localização', 'Obtendo sua localização para melhores resultados...', 'info');
             await geoService.getLocation();
             showToast('Sucesso', 'Localização obtida! Mostrando distâncias reais.', 'success');
-            if (this.currentPath === '/locais' || this.currentPath === '/adotar') {
+            if (this.currentPage === 'locais' || this.currentPage === 'adotar') {
                 this.render();
             }
         } catch (error) {
@@ -731,11 +772,11 @@ class PetMatchApp {
             AnimationUtils.observeElements('.info-card', 'animate-in');
             AnimationUtils.observeElements('.ong-card', 'animate-slide');
             AnimationUtils.observeElements('.founder-card', 'animate-in-scale');
-            
+
             document.querySelectorAll('.btn').forEach(btn => {
                 AnimationUtils.addRippleEffect(btn);
             });
-            
+
             document.querySelectorAll('.stat-number').forEach(stat => {
                 const value = parseInt(stat.textContent);
                 if (!isNaN(value)) {
@@ -746,8 +787,11 @@ class PetMatchApp {
     }
 
     setupRouting() {
+        // Não precisamos mais de popstate para SPA, pois agora são páginas separadas
+        // Mas mantemos para compatibilidade
         window.addEventListener('popstate', () => {
-            this.currentPath = window.location.pathname;
+            if (isLoggingOut) return; // Prevent rendering if logging out
+            this.currentPage = getCurrentPage();
             this.checkAuth();
             this.render();
             setTimeout(() => this.initAnimations(), 100);
@@ -757,39 +801,27 @@ class PetMatchApp {
             const link = e.target.closest('a[data-route]');
             if (link) {
                 e.preventDefault();
-                const path = link.getAttribute('href');
-                this.navigateTo(path);
+                const href = link.getAttribute('href');
+                window.location.href = href;
             }
         });
     }
 
     checkAuth() {
-        const protectedRoutes = ['/home', '/adotar', '/locais', '/sobre', '/favoritos'];
-        if (protectedRoutes.includes(this.currentPath) && !authService.isAuthenticated()) {
-            this.currentPath = '/';
-            window.history.pushState({}, '', '/');
+        const protectedPages = ['home', 'adotar', 'locais', 'sobre', 'favoritos'];
+        if (protectedPages.includes(this.currentPage) && !authService.isAuthenticated()) {
+            window.location.href = './index.html';
         }
     }
 
     navigateTo(path) {
-        const protectedRoutes = ['/home', '/adotar', '/locais', '/sobre', '/favoritos'];
-        
-        if (protectedRoutes.includes(path) && !authService.isAuthenticated()) {
-            this.currentPath = '/';
-            window.history.pushState({}, '', '/');
-        } else {
-            this.currentPath = path;
-            window.history.pushState({}, '', path);
-        }
-        
-        this.render();
-        setTimeout(() => this.initAnimations(), 100);
-        
-        // Close notifications dropdown on navigation
-        this.state.showNotifications = false;
+        window.location.href = path;
     }
 
     setState(newState) {
+        // Prevent state updates during logout
+        if (isLoggingOut) return;
+
         this.state = { ...this.state, ...newState };
         this.render();
     }
@@ -890,9 +922,12 @@ class PetMatchApp {
                 }
             }
 
-            // Logout
+            // Logout - MODIFICADO: evita re-renderização
             if (e.target.closest('#logout-btn')) {
+                e.preventDefault();
+                e.stopPropagation();
                 authService.logout();
+                return false;
             }
 
             // Notification toggle
@@ -951,36 +986,36 @@ class PetMatchApp {
 
     async handleAuthSubmit(form) {
         this.setState({ isAuthenticating: true, authError: null });
-        
+
         const formData = new FormData(form);
         const email = formData.get('email') || form.querySelector('input[type="email"]').value;
         const password = formData.get('password') || form.querySelector('input[type="password"]').value;
         const nome = form.querySelector('input[type="text"]')?.value;
-        
+
         let result;
-        
+
         if (this.state.isLogin) {
             result = await authService.login(email, password);
         } else {
             result = await authService.register(nome, email, password);
         }
-        
+
         if (result.success) {
             const card = document.querySelector('.card');
             if (card) {
                 card.style.animation = 'fadeInScale 0.5s ease reverse';
                 setTimeout(() => {
-                    this.navigateTo('/home');
+                    window.location.href = './index.html';
                 }, 300);
             } else {
-                this.navigateTo('/home');
+                window.location.href = './index.html';
             }
         } else {
             this.setState({ 
                 authError: result.error || 'Erro na autenticação',
                 isAuthenticating: false 
             });
-            
+
             const card = document.querySelector('.card');
             if (card) {
                 card.style.animation = 'shake 0.5s ease';
@@ -995,19 +1030,19 @@ class PetMatchApp {
         e.preventDefault();
         const form = e.target;
         const submitBtn = form.querySelector('button[type="submit"]');
-        
+
         const originalText = submitBtn.innerHTML;
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
         submitBtn.disabled = true;
-        
+
         await new Promise(resolve => setTimeout(resolve, 1500));
-        
+
         const rect = submitBtn.getBoundingClientRect();
         AnimationUtils.createConfetti(rect.left + rect.width/2, rect.top + rect.height/2);
-        
+
         submitBtn.innerHTML = '<i class="fas fa-check"></i> Enviado!';
         submitBtn.style.background = 'linear-gradient(135deg, #10B981, #059669)';
-        
+
         setTimeout(() => {
             showToast('Mensagem Enviada!', 'A ONG entrará em contato em breve.', 'success');
             this.closeModal();
@@ -1018,16 +1053,16 @@ class PetMatchApp {
         e.preventDefault();
         const form = e.target;
         const submitBtn = form.querySelector('button[type="submit"]');
-        
+
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processando...';
         submitBtn.disabled = true;
-        
+
         await new Promise(resolve => setTimeout(resolve, 1500));
-        
+
         const pet = APP_DATA.pets.find(p => p.id === this.state.schedulePetId);
         const date = document.getElementById('schedule-date').value;
         const time = document.getElementById('schedule-time').value;
-        
+
         // Save to localStorage (simulated)
         const schedules = JSON.parse(localStorage.getItem('petmatch_schedules')) || [];
         schedules.push({
@@ -1039,10 +1074,10 @@ class PetMatchApp {
             createdAt: new Date().toISOString()
         });
         localStorage.setItem('petmatch_schedules', JSON.stringify(schedules));
-        
+
         submitBtn.innerHTML = '<i class="fas fa-check"></i> Agendado!';
         submitBtn.style.background = 'linear-gradient(135deg, #10B981, #059669)';
-        
+
         // Add notification
         notificationService.add(
             'Visita Agendada!',
@@ -1050,7 +1085,7 @@ class PetMatchApp {
             'success',
             'fa-calendar-check'
         );
-        
+
         setTimeout(() => {
             showToast('Visita Agendada!', `Você agendou uma visita para ${date} às ${time}`, 'success');
             this.closeModal();
@@ -1063,9 +1098,9 @@ class PetMatchApp {
         this.setState({ darkMode: newDarkMode });
         localStorage.setItem('petmatch_darkmode', newDarkMode);
         document.body.classList.toggle('dark-mode', newDarkMode);
-        
+
         document.body.style.transition = 'background-color 0.5s ease, color 0.5s ease';
-        
+
         const themeIcon = document.querySelector('#theme-toggle i');
         if (themeIcon) {
             themeIcon.style.transform = 'rotate(360deg) scale(0)';
@@ -1079,7 +1114,7 @@ class PetMatchApp {
     toggleFavorite(petId) {
         let favorites = [...this.state.favorites];
         const index = favorites.indexOf(petId);
-        
+
         if (index > -1) {
             favorites.splice(index, 1);
             showToast('Removido', 'Pet removido dos favoritos', 'info');
@@ -1087,16 +1122,16 @@ class PetMatchApp {
             favorites.push(petId);
             showToast('Adicionado', 'Pet adicionado aos favoritos!', 'success');
         }
-        
+
         this.setState({ favorites });
         localStorage.setItem('petmatch_favorites', JSON.stringify(favorites));
-        
+
         const btn = document.querySelector(`.favorite-btn[data-pet-id="${petId}"]`);
         if (btn) {
             btn.classList.toggle('active');
             const icon = btn.querySelector('i');
             icon.className = favorites.includes(petId) ? 'fas fa-heart' : 'far fa-heart';
-            
+
             btn.style.transform = 'scale(1.3)';
             setTimeout(() => {
                 btn.style.transform = '';
@@ -1107,16 +1142,16 @@ class PetMatchApp {
     addToRecentlyViewed(petId) {
         let recentlyViewed = [...this.state.recentlyViewed];
         const index = recentlyViewed.indexOf(petId);
-        
+
         if (index > -1) {
             recentlyViewed.splice(index, 1);
         }
-        
+
         recentlyViewed.unshift(petId);
         if (recentlyViewed.length > 5) {
             recentlyViewed = recentlyViewed.slice(0, 5);
         }
-        
+
         this.setState({ recentlyViewed });
         localStorage.setItem('petmatch_recently_viewed', JSON.stringify(recentlyViewed));
     }
@@ -1124,7 +1159,7 @@ class PetMatchApp {
     applyFilters() {
         const { filters } = this.state;
         let filteredPets = APP_DATA.pets;
-        
+
         if (filters.deficiencia) {
             filteredPets = filteredPets.filter(p => p.deficiencia === filters.deficiencia);
         }
@@ -1142,13 +1177,13 @@ class PetMatchApp {
                 p.cidade.toLowerCase().includes(filters.cidade.toLowerCase())
             );
         }
-        
+
         this.setState({ 
             filteredPets,
             currentPage: 1 
         });
         this.closeModal();
-        
+
         setTimeout(() => {
             AnimationUtils.observeElements('.pet-card', 'animate-in-scale');
         }, 100);
@@ -1172,7 +1207,7 @@ class PetMatchApp {
     goToPage(page) {
         this.setState({ currentPage: page });
         window.scrollTo({ top: 0, behavior: 'smooth' });
-        
+
         setTimeout(() => {
             AnimationUtils.observeElements('.pet-card', 'animate-in-scale');
         }, 100);
@@ -1181,12 +1216,12 @@ class PetMatchApp {
     showPetModal(petId) {
         const pet = APP_DATA.pets.find(p => p.id === petId);
         if (!pet) return;
-        
+
         this.addToRecentlyViewed(petId);
-        
+
         const modal = document.getElementById('pet-modal');
         const modalBody = document.getElementById('pet-modal-body');
-        
+
         modalBody.innerHTML = `
             <div class="pet-detail-content">
                 <img src="${pet.imagem}" class="pet-detail-image" alt="${pet.nome}" loading="eager">
@@ -1200,30 +1235,30 @@ class PetMatchApp {
                             </button>
                         </div>
                     </div>
-                    
+
                     <div class="pet-detail-meta">
                         <span class="pet-meta-item">${pet.tipo}</span>
                         <span class="pet-meta-item">${pet.porte}</span>
                         <span class="pet-meta-item">${pet.idade}</span>
                         <span class="pet-meta-item">${pet.genero}</span>
                     </div>
-                    
+
                     <p class="text-gray-500 font-bold mb-2">
                         <i class="fas fa-map-marker-alt"></i> ${pet.cidade} (CEP ${pet.cep})
                     </p>
                     <p class="text-gray-400 italic font-medium mb-4">
                         <i class="fas fa-hands-helping"></i> ${pet.ong}
                     </p>
-                    
+
                     ${geoService.userLocation ? `
                         <div class="distance-badge mb-4">
                             <i class="fas fa-location-arrow"></i> 
                             ${geoService.getDistanceToOng(APP_DATA.ongs.find(o => o.nome === pet.ong)) || '~'} km de distância
                         </div>
                     ` : ''}
-                    
+
                     <p class="pet-detail-description">${pet.descricao}</p>
-                    
+
                     <div class="flex gap-4 mt-6 flex-wrap">
                         <button class="btn btn-primary flex-1 adopt-btn" onclick="chatService.startChat('${pet.ong}'); app.closeModal();">
                             <i class="fas fa-comment"></i> Conversar
@@ -1238,27 +1273,27 @@ class PetMatchApp {
                 </div>
             </div>
         `;
-        
+
         const adoptBtn = modalBody.querySelector('.adopt-btn');
         if (adoptBtn) {
             adoptBtn.addEventListener('click', (e) => {
                 if (!e.target.closest('.adopt-btn').innerHTML.includes('Conversar')) {
                     const rect = adoptBtn.getBoundingClientRect();
                     AnimationUtils.createConfetti(rect.left + rect.width/2, rect.top + rect.height/2);
-                    
+
                     adoptBtn.innerHTML = '<i class="fas fa-check"></i> Solicitação Enviada!';
                     adoptBtn.style.background = 'linear-gradient(135deg, #10B981, #059669)';
-                    
+
                     setTimeout(() => {
                         alert(`Sua solicitação de adoção para ${pet.nome} foi enviada! A ONG entrará em contato em breve.`);
                     }, 500);
                 }
             });
         }
-        
+
         modal.classList.add('active');
         document.body.style.overflow = 'hidden';
-        
+
         setTimeout(() => {
             const content = modal.querySelector('.modal-content');
             if (content) {
@@ -1271,9 +1306,9 @@ class PetMatchApp {
     showScheduleModal(petId) {
         const pet = APP_DATA.pets.find(p => p.id === petId);
         if (!pet) return;
-        
+
         this.setState({ schedulePetId: petId });
-        
+
         // Set min date to tomorrow
         const tomorrow = new Date();
         tomorrow.setDate(tomorrow.getDate() + 1);
@@ -1281,10 +1316,10 @@ class PetMatchApp {
         if (dateInput) {
             dateInput.min = tomorrow.toISOString().split('T')[0];
         }
-        
+
         document.getElementById('schedule-pet-name').textContent = pet.nome;
         document.getElementById('schedule-ong-name').textContent = pet.ong;
-        
+
         const modal = document.getElementById('schedule-modal');
         modal.classList.add('active');
         document.body.style.overflow = 'hidden';
@@ -1293,13 +1328,13 @@ class PetMatchApp {
     async sharePet(petId) {
         const pet = APP_DATA.pets.find(p => p.id === parseInt(petId));
         if (!pet) return;
-        
+
         const shareData = {
             title: `Adote ${pet.nome} - PetMatch`,
             text: `Conheça ${pet.nome}, um pet ${pet.deficiencia.toLowerCase()} de ${pet.idade} esperando por um lar!`,
             url: window.location.href
         };
-        
+
         try {
             if (navigator.share) {
                 await navigator.share(shareData);
@@ -1316,16 +1351,16 @@ class PetMatchApp {
     showFilterModal() {
         const modal = document.getElementById('filter-modal');
         const modalBody = document.getElementById('filter-modal-body');
-        
+
         const deficiencias = [...new Set(APP_DATA.pets.map(p => p.deficiencia))];
         const tipos = [...new Set(APP_DATA.pets.map(p => p.tipo))];
         const portes = [...new Set(APP_DATA.pets.map(p => p.porte))];
         const idades = [...new Set(APP_DATA.pets.map(p => p.idade))];
         const cidades = [...new Set(APP_DATA.pets.map(p => p.cidade))];
-        
+
         modalBody.innerHTML = `
             <h3 class="subtitle mb-4">Filtrar Pets</h3>
-            
+
             <div class="grid gap-4">
                 <div>
                     <label class="filter-label">Deficiência</label>
@@ -1336,7 +1371,7 @@ class PetMatchApp {
                         `).join('')}
                     </select>
                 </div>
-                
+
                 <div>
                     <label class="filter-label">Tipo</label>
                     <select id="filter-tipo" class="form-input select-input">
@@ -1346,7 +1381,7 @@ class PetMatchApp {
                         `).join('')}
                     </select>
                 </div>
-                
+
                 <div>
                     <label class="filter-label">Porte</label>
                     <select id="filter-porte" class="form-input select-input">
@@ -1356,7 +1391,7 @@ class PetMatchApp {
                         `).join('')}
                     </select>
                 </div>
-                
+
                 <div>
                     <label class="filter-label">Idade</label>
                     <select id="filter-idade" class="form-input select-input">
@@ -1366,7 +1401,7 @@ class PetMatchApp {
                         `).join('')}
                     </select>
                 </div>
-                
+
                 <div>
                     <label class="filter-label">Cidade</label>
                     <select id="filter-cidade" class="form-input select-input">
@@ -1377,7 +1412,7 @@ class PetMatchApp {
                     </select>
                 </div>
             </div>
-            
+
             <div class="flex gap-3 mt-6">
                 <button id="apply-filters" class="btn btn-primary flex-1">
                     <i class="fas fa-check"></i> Aplicar Filtros
@@ -1387,7 +1422,7 @@ class PetMatchApp {
                 </button>
             </div>
         `;
-        
+
         modal.classList.add('active');
         document.body.style.overflow = 'hidden';
     }
@@ -1395,54 +1430,54 @@ class PetMatchApp {
     showContactModal(ongId) {
         const ong = APP_DATA.ongs.find(o => o.id === ongId);
         if (!ong) return;
-        
+
         const modal = document.getElementById('contact-modal');
         const modalBody = document.getElementById('contact-modal-body');
-        
+
         const user = authService.getUser();
         const distance = geoService.getDistanceToOng(ong);
-        
+
         modalBody.innerHTML = `
             <h3 class="subtitle mb-4">Contato: ${ong.nome}</h3>
-            
+
             <div class="mb-6" style="background: var(--neutral-gray-50); padding: 1rem; border-radius: var(--radius-md);">
                 <p class="mb-2"><i class="fas fa-map-marker-alt text-primary-orange"></i> <strong>Endereço:</strong> ${ong.endereco}</p>
                 <p class="mb-2"><i class="fas fa-phone text-primary-blue"></i> <strong>Telefone:</strong> ${ong.telefone}</p>
                 <p class="mb-2"><i class="fas fa-envelope text-primary-pink"></i> <strong>Email:</strong> ${ong.email}</p>
                 ${distance ? `<p class="mb-2"><i class="fas fa-route text-primary-orange"></i> <strong>Distância:</strong> ${distance} km da sua localização</p>` : ''}
             </div>
-            
+
             <button class="btn btn-secondary w-full mb-4 chat-ong-btn" data-ong-id="${ong.id}">
                 <i class="fas fa-comments"></i> Iniciar Chat
             </button>
-            
+
             <form id="contact-form" class="space-y-4">
                 <div>
                     <label class="filter-label">Seu Nome</label>
                     <input type="text" name="nome" class="form-input" required placeholder="Digite seu nome" value="${user?.nome || ''}">
                 </div>
-                
+
                 <div>
                     <label class="filter-label">Seu Email</label>
                     <input type="email" name="email" class="form-input" required placeholder="seu@email.com" value="${user?.email || ''}">
                 </div>
-                
+
                 <div>
                     <label class="filter-label">Seu Telefone</label>
                     <input type="tel" name="telefone" class="form-input" placeholder="(11) 99999-9999">
                 </div>
-                
+
                 <div>
                     <label class="filter-label">Mensagem</label>
                     <textarea name="mensagem" class="form-input" rows="4" required placeholder="Escreva sua mensagem..."></textarea>
                 </div>
-                
+
                 <button type="submit" class="btn btn-primary w-full">
                     <i class="fas fa-paper-plane"></i> Enviar Mensagem
                 </button>
             </form>
         `;
-        
+
         modal.classList.add('active');
         document.body.style.overflow = 'hidden';
     }
@@ -1456,7 +1491,7 @@ class PetMatchApp {
                 content.style.opacity = '0';
             }
         });
-        
+
         setTimeout(() => {
             modals.forEach(modal => {
                 modal.classList.remove('active');
@@ -1467,14 +1502,20 @@ class PetMatchApp {
 
     initMap() {
         const mapContainer = document.getElementById('map');
-        if (!mapContainer || this.map) return;
-        
+        if (!mapContainer) return;
+
+        // Destruir mapa anterior se existir
+        if (this.map) {
+            this.map.remove();
+            this.map = null;
+        }
+
         this.map = L.map('map').setView([-23.550, -46.633], 12);
-        
+
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors'
         }).addTo(this.map);
-        
+
         // Add user location if available
         if (geoService.userLocation) {
             const userIcon = L.divIcon({
@@ -1483,11 +1524,11 @@ class PetMatchApp {
                 iconSize: [20, 20],
                 iconAnchor: [10, 10]
             });
-            
+
             L.marker([geoService.userLocation.lat, geoService.userLocation.lng], { icon: userIcon })
                 .addTo(this.map)
                 .bindPopup('Você está aqui');
-            
+
             // Add circle
             L.circle([geoService.userLocation.lat, geoService.userLocation.lng], {
                 color: '#1893F8',
@@ -1496,7 +1537,7 @@ class PetMatchApp {
                 radius: 5000
             }).addTo(this.map);
         }
-        
+
         // Add ONG markers
         APP_DATA.ongs.forEach((ong, index) => {
             if (ong.lat && ong.lng) {
@@ -1516,13 +1557,13 @@ class PetMatchApp {
                             </button>
                         </div>
                     `;
-                    
+
                     const marker = L.marker([ong.lat, ong.lng]).addTo(this.map);
                     marker.bindPopup(popupContent);
                 }, index * 200);
             }
         });
-        
+
         // Add locate button
         const locateBtn = L.control({ position: 'topright' });
         locateBtn.onAdd = () => {
@@ -1562,15 +1603,18 @@ class PetMatchApp {
             filteredPets,
             currentPage: 1 
         });
-        
+
         setTimeout(() => {
             AnimationUtils.observeElements('.pet-card', 'animate-in-scale');
         }, 100);
     }
 
     render() {
+        // Prevent rendering if logging out
+        if (isLoggingOut) return;
+
         const root = document.getElementById('root');
-        const isAuthPage = this.currentPath === '/';
+        const isAuthPage = this.currentPage === 'index' || this.currentPage === '' || this.currentPage === null;
 
         document.body.classList.toggle('dark-mode', this.state.darkMode);
 
@@ -1584,17 +1628,17 @@ class PetMatchApp {
             </div>
         `;
 
-        if (this.currentPath === '/adotar') {
+        if (this.currentPage === 'adotar') {
             this.bindAdotarFilters();
         }
 
-        if (this.currentPath === '/locais' && !this.state.isLoading) {
+        if (this.currentPage === 'locais' && !this.state.isLoading) {
             setTimeout(() => this.initMap(), 100);
         }
-        
+
         // Update notification badge
         setTimeout(() => notificationService.updateBadge(), 100);
-        
+
         setTimeout(() => {
             document.querySelectorAll('.btn').forEach(btn => {
                 AnimationUtils.addRippleEffect(btn);
@@ -1603,12 +1647,12 @@ class PetMatchApp {
     }
 
     renderSkeleton() {
-        if (this.currentPath === '/' || this.currentPath === '') {
+        if (this.currentPage === 'index' || this.currentPage === '') {
             return this.renderLoading();
         }
         return `
             <div class="w-full animate-in">
-                ${this.currentPath === '/home' ? `
+                ${this.currentPage === 'home' ? `
                     <div class="hero-section animate-in mb-10">
                         <div class="skeleton" style="width:200px;height:40px;margin-bottom:2rem;"></div>
                         <div class="skeleton" style="width:100%;height:60px;margin-bottom:1rem;"></div>
@@ -1676,13 +1720,23 @@ class PetMatchApp {
     }
 
     renderHeader() {
-        const isAuthPage = this.currentPath === '/';
-        const isActive = (path) => this.currentPath === path;
+        const currentPage = this.currentPage;
+        const isAuthPage = currentPage === 'index' || currentPage === '' || currentPage === null;
+        const isActive = (page) => currentPage === page;
         const user = authService.getUser();
-        
+
+        // Links corrigidos para arquivos HTML
+        const links = {
+            home: './index.html',
+            adotar: './adotar.html',
+            locais: './locais.html',
+            sobre: './sobre.html',
+            favoritos: './favoritos.html'
+        };
+
         return `
             <header class="app-header">
-                <a href="${isAuthPage ? '/' : '/home'}" class="logo-link" data-route>
+                <a href="${links.home}" class="logo-link">
                     <div class="logo-image">
                         <img src="logo_petmatch.jpeg" alt="PetMatch Logo" style="width: 50px; height: 50px; border-radius: 12px; object-fit: cover;">
                     </div>
@@ -1692,28 +1746,28 @@ class PetMatchApp {
                 ${!isAuthPage && authService.isAuthenticated() ? `
                     <div class="nav-container">
                         <nav class="nav-menu">
-                            <a href="/home" class="nav-link ${isActive('/home') ? 'active' : ''}" data-route>
+                            <a href="${links.home}" class="nav-link ${isActive('home') ? 'active' : ''}">
                                 <i class="fas fa-home"></i>
                                 Home
                             </a>
-                            <a href="/adotar" class="nav-link ${isActive('/adotar') ? 'active' : ''}" data-route>
+                            <a href="${links.adotar}" class="nav-link ${isActive('adotar') ? 'active' : ''}">
                                 <i class="fas fa-paw"></i>
                                 Adotar
                             </a>
-                            <a href="/locais" class="nav-link ${isActive('/locais') ? 'active' : ''}" data-route>
+                            <a href="${links.locais}" class="nav-link ${isActive('locais') ? 'active' : ''}">
                                 <i class="fas fa-map-marker-alt"></i>
                                 Locais
                             </a>
-                            <a href="/sobre" class="nav-link ${isActive('/sobre') ? 'active' : ''}" data-route>
+                            <a href="${links.sobre}" class="nav-link ${isActive('sobre') ? 'active' : ''}">
                                 <i class="fas fa-info-circle"></i>
                                 Sobre
                             </a>
-                            <a href="/favoritos" class="nav-link ${isActive('/favoritos') ? 'active' : ''}" data-route>
+                            <a href="${links.favoritos}" class="nav-link ${isActive('favoritos') ? 'active' : ''}">
                                 <i class="fas fa-heart"></i>
                                 Favoritos
                             </a>
                         </nav>
-                        
+
                         <div class="user-menu" style="display: flex; align-items: center; gap: 1rem; margin-left: 1rem;">
                             <div class="notification-container">
                                 <button id="notification-btn" class="notification-btn">
@@ -1744,6 +1798,14 @@ class PetMatchApp {
     }
 
     renderFooter() {
+        // Links corrigidos para arquivos HTML
+        const links = {
+            home: './index.html',
+            adotar: './adotar.html',
+            locais: './locais.html',
+            sobre: './sobre.html'
+        };
+
         return `
             <footer class="app-footer">
                 <div class="footer-content">
@@ -1765,17 +1827,17 @@ class PetMatchApp {
                             </a>
                         </div>
                     </div>
-                    
+
                     <div class="footer-section">
                         <h3>Links Rápidos</h3>
                         <ul class="footer-links">
-                            <li><a href="/home" data-route><i class="fas fa-chevron-right"></i> Home</a></li>
-                            <li><a href="/adotar" data-route><i class="fas fa-chevron-right"></i> Adotar</a></li>
-                            <li><a href="/locais" data-route><i class="fas fa-chevron-right"></i> ONGs Parceiras</a></li>
-                            <li><a href="/sobre" data-route><i class="fas fa-chevron-right"></i> Sobre Nós</a></li>
+                            <li><a href="${links.home}"><i class="fas fa-chevron-right"></i> Home</a></li>
+                            <li><a href="${links.adotar}"><i class="fas fa-chevron-right"></i> Adotar</a></li>
+                            <li><a href="${links.locais}"><i class="fas fa-chevron-right"></i> ONGs Parceiras</a></li>
+                            <li><a href="${links.sobre}"><i class="fas fa-chevron-right"></i> Sobre Nós</a></li>
                         </ul>
                     </div>
-                    
+
                     <div class="footer-section">
                         <h3>Contato</h3>
                         <ul class="footer-links">
@@ -1785,7 +1847,7 @@ class PetMatchApp {
                         </ul>
                     </div>
                 </div>
-                
+
                 <div class="footer-bottom">
                     <p>&copy; ${new Date().getFullYear()} PetMatch. Todos os direitos reservados.</p>
                     <p>Desenvolvido com <i class="fas fa-heart" style="color: #FF9C36;"></i> para pets especiais.</p>
@@ -1795,27 +1857,36 @@ class PetMatchApp {
     }
 
     renderContent() {
-        switch (this.currentPath) {
-            case '/':
-                return this.renderAuth();
-            case '/home':
-                return authService.isAuthenticated() ? this.renderHome() : this.renderAuth();
-            case '/adotar':
+        switch (this.currentPage) {
+            case 'index':
+            case 'home':
+            case '':
+            case null:
+                if (authService.isAuthenticated()) {
+                    return this.renderHome();
+                } else {
+                    return this.renderAuth();
+                }
+            case 'adotar':
                 return authService.isAuthenticated() ? this.renderAdotar() : this.renderAuth();
-            case '/locais':
+            case 'locais':
                 return authService.isAuthenticated() ? this.renderLocais() : this.renderAuth();
-            case '/sobre':
+            case 'sobre':
                 return authService.isAuthenticated() ? this.renderSobre() : this.renderAuth();
-            case '/favoritos':
+            case 'favoritos':
                 return authService.isAuthenticated() ? this.renderFavoritos() : this.renderAuth();
             default:
-                return authService.isAuthenticated() ? this.renderHome() : this.renderAuth();
+                if (authService.isAuthenticated()) {
+                    return this.renderHome();
+                } else {
+                    return this.renderAuth();
+                }
         }
     }
 
     renderAuth() {
         const { isLogin, authError, isAuthenticating } = this.state;
-        
+
         return `
             <div class="card animate-in">
                 <h2 class="title" style="font-size: 2rem; margin-bottom: 0.5rem;">
@@ -1824,22 +1895,22 @@ class PetMatchApp {
                 <p style="text-align: center; color: var(--neutral-gray-500); margin-bottom: 1.5rem; font-size: 0.95rem;">
                     ${isLogin ? 'Entre para continuar' : 'Preencha seus dados'}
                 </p>
-                
+
                 ${authError ? `
                     <div style="background: #FEE2E2; border-left: 4px solid #EF4444; padding: 1rem; margin-bottom: 1rem; border-radius: 8px; color: #DC2626; font-size: 0.9rem;">
                         <i class="fas fa-exclamation-circle"></i> ${authError}
                     </div>
                 ` : ''}
-                
+
                 <form id="auth-form" class="space-y-4">
                     ${!isLogin ? `
                         <input type="text" name="nome" placeholder="Nome Completo" class="form-input" required />
                     ` : ''}
-                    
+
                     <input type="email" name="email" placeholder="E-mail" class="form-input" required />
-                    
+
                     <input type="password" name="password" placeholder="Senha" class="form-input" required minlength="6" />
-                    
+
                     <button type="submit" class="btn btn-primary w-full" ${isAuthenticating ? 'disabled' : ''} style="${isAuthenticating ? 'opacity: 0.7; cursor: not-allowed;' : ''}">
                         ${isAuthenticating 
                             ? '<i class="fas fa-spinner fa-spin"></i> Aguarde...' 
@@ -1851,7 +1922,7 @@ class PetMatchApp {
                 <button id="toggle-auth" class="w-full mt-4 text-center font-bold py-2 transition-all cursor-pointer auth-toggle" style="background: transparent; border: none; color: var(--primary-blue);">
                     ${isLogin ? 'Não tem conta? Cadastre-se aqui' : 'Já tem conta? Faça Login'}
                 </button>
-                
+
                 <div style="margin-top: 2rem; text-align: center; font-size: 0.75rem; color: var(--neutral-gray-400);">
                     <i class="fas fa-shield-alt"></i> API Key: ${API_CONFIG.publicKey.substring(0, 12)}...
                 </div>
@@ -1863,10 +1934,15 @@ class PetMatchApp {
         const recentlyViewedPets = APP_DATA.pets.filter(pet => 
             this.state.recentlyViewed.includes(pet.id)
         ).slice(0, 3);
-        
+
         const featuredPets = APP_DATA.pets.slice(0, 3);
         const user = authService.getUser();
-        
+
+        // Links corrigidos
+        const adotarLink = './adotar.html';
+        const sobreLink = './sobre.html';
+        const locaisLink = './locais.html';
+
         return `
             <div class="w-full space-y-10">
                 <div class="hero-section animate-in">
@@ -1876,7 +1952,7 @@ class PetMatchApp {
                                 <i class="fas fa-paw"></i>
                             </div>
                         </div>
-                        
+
                         <h1 class="hero-title text-center">
                             Olá, ${user?.nome || 'amigo'}! 👋
                         </h1>
@@ -1887,23 +1963,23 @@ class PetMatchApp {
                             Milhares de pets com deficiência estão esperando por um lar cheio de amor. 
                             Faça a diferença na vida de um animal especial hoje!
                         </p>
-                        
+
                         ${geoService.userLocation ? `
                             <div style="background: rgba(255,255,255,0.2); padding: 1rem; border-radius: var(--radius-lg); margin-bottom: 1.5rem; text-align: center; color: #0b3c5d; font-weight: 600;">
                                 <i class="fas fa-map-marker-alt"></i> Localização ativa! Mostrando distâncias reais.
                             </div>
                         ` : ''}
-                        
+
                         <div class="flex gap-4 justify-center flex-wrap">
-                            <a href="/adotar" class="btn btn-primary" data-route>
+                            <a href="${adotarLink}" class="btn btn-primary">
                                 <i class="fas fa-search"></i> Encontrar meu Pet
                             </a>
-                            <a href="/sobre" class="btn btn-outline" data-route>
+                            <a href="${sobreLink}" class="btn btn-outline">
                                 <i class="fas fa-info-circle"></i> Saiba Mais
                             </a>
                         </div>
                     </div>
-                    
+
                     <div class="decoration-circle decoration-1"></div>
                     <div class="decoration-circle decoration-2"></div>
                     <div class="decoration-circle decoration-3"></div>
@@ -1915,7 +1991,7 @@ class PetMatchApp {
                         ${featuredPets.map((pet, index) => this.renderPetCard(pet, index)).join('')}
                     </div>
                     <div class="text-center mt-6">
-                        <a href="/adotar" class="btn btn-secondary" data-route>
+                        <a href="${adotarLink}" class="btn btn-secondary">
                             Ver Todos os Pets <i class="fas fa-arrow-right"></i>
                         </a>
                     </div>
@@ -1970,10 +2046,10 @@ class PetMatchApp {
                         Cada adoção transforma duas vidas: a do pet e a sua. Encontre hoje mesmo seu companheiro ideal!
                     </p>
                     <div class="flex gap-4 justify-center flex-wrap">
-                        <a href="/adotar" class="btn btn-primary" data-route>
+                        <a href="${adotarLink}" class="btn btn-primary">
                             <i class="fas fa-paw"></i> Encontrar meu Pet
                         </a>
-                        <a href="/locais" class="btn btn-yellow" data-route>
+                        <a href="${locaisLink}" class="btn btn-yellow">
                             <i class="fas fa-map-marker-alt"></i> Encontrar Abrigos
                         </a>
                     </div>
@@ -1986,7 +2062,7 @@ class PetMatchApp {
         const isFavorite = this.state.favorites.includes(pet.id);
         const ong = APP_DATA.ongs.find(o => o.nome === pet.ong);
         const distance = ong && geoService.userLocation ? geoService.getDistanceToOng(ong) : null;
-        
+
         return `
             <div class="pet-card" style="animation-delay: ${index * 0.1}s;">
                 <button class="favorite-btn ${isFavorite ? 'active' : ''}" data-pet-id="${pet.id}" aria-label="${isFavorite ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}">
@@ -1998,13 +2074,13 @@ class PetMatchApp {
                         <h3 class="pet-name">${pet.nome}</h3>
                         <span class="pet-tag">${pet.deficiencia}</span>
                     </div>
-                    
+
                     <div class="pet-meta mb-3">
                         <span class="pet-meta-item">${pet.tipo}</span>
                         <span class="pet-meta-item">${pet.porte}</span>
                         <span class="pet-meta-item">${pet.idade}</span>
                     </div>
-                    
+
                     <p class="text-gray-500 font-bold mb-2">
                         <i class="fas fa-map-marker-alt"></i> ${pet.cidade}
                         ${distance ? `<span style="color: var(--primary-orange); margin-left: 5px;">(${distance} km)</span>` : ''}
@@ -2012,7 +2088,7 @@ class PetMatchApp {
                     <p class="text-gray-400 italic font-medium mb-4">
                         <i class="fas fa-hands-helping"></i> ${pet.ong}
                     </p>
-                    
+
                     <div class="flex gap-2">
                         <button class="btn btn-primary flex-1 pet-detail-btn" data-pet-id="${pet.id}">
                             Conhecer
@@ -2028,17 +2104,17 @@ class PetMatchApp {
 
     renderAdotar() {
         const { filteredPets, currentPage, petsPerPage } = this.state;
-        
+
         const startIndex = (currentPage - 1) * petsPerPage;
         const endIndex = startIndex + petsPerPage;
         const paginatedPets = filteredPets.slice(startIndex, endIndex);
         const totalPages = Math.ceil(filteredPets.length / petsPerPage);
-        
+
         return `
             <div class="w-full animate-in">
                 <div class="filter-section">
                     <h3 class="subtitle mb-4">Encontre seu pet ideal</h3>
-                    
+
                     <div class="filter-row">
                         <div class="filter-group">
                             <label class="filter-label">CEP</label>
@@ -2051,7 +2127,7 @@ class PetMatchApp {
                                 maxlength="9"
                             />
                         </div>
-                        
+
                         <div class="filter-group">
                             <label class="filter-label">Cidade</label>
                             <input 
@@ -2062,14 +2138,14 @@ class PetMatchApp {
                                 value="${this.state.cidade}"
                             />
                         </div>
-                        
+
                         <div class="filter-group flex items-end">
                             <button id="search-pets" class="btn btn-primary w-full">
                                 <i class="fas fa-search"></i> Buscar
                             </button>
                         </div>
                     </div>
-                    
+
                     <div class="filter-actions">
                         <button id="open-filters" class="btn btn-outline">
                             <i class="fas fa-filter"></i> Mais Filtros
@@ -2106,7 +2182,7 @@ class PetMatchApp {
                                 ${currentPage === 1 ? 'disabled' : ''}>
                             <i class="fas fa-chevron-left"></i>
                         </button>
-                        
+
                         ${Array.from({length: Math.min(5, totalPages)}, (_, i) => {
                             let pageNum;
                             if (totalPages <= 5) {
@@ -2118,7 +2194,7 @@ class PetMatchApp {
                             } else {
                                 pageNum = currentPage - 2 + i;
                             }
-                            
+
                             return `
                                 <button class="pagination-btn ${currentPage === pageNum ? 'active' : ''}" 
                                         data-page="${pageNum}">
@@ -2126,7 +2202,7 @@ class PetMatchApp {
                                 </button>
                             `;
                         }).join('')}
-                        
+
                         <button class="pagination-btn ${currentPage === totalPages ? 'disabled' : ''}" 
                                 data-page="${currentPage + 1}" 
                                 ${currentPage === totalPages ? 'disabled' : ''}>
@@ -2189,15 +2265,15 @@ class PetMatchApp {
                             <i class="fas fa-paw"></i>
                         </div>
                     </div>
-                    
+
                     <h2 class="title">Sobre o PetMatch</h2>
-                    
+
                     <div class="space-y-6 text-center max-w-3xl mx-auto">
                         <p class="text-xl text-gray-700 leading-relaxed font-medium">
                             O <span class="text-primary-blue font-black">PetMatch</span> surgiu do desejo de transformar a realidade de animais que, muitas vezes, são invisíveis aos olhos da sociedade: 
                             <span class="text-primary-pink font-bold"> os pets com deficiência.</span>
                         </p>
-                        
+
                         <p class="text-lg text-gray-500 leading-relaxed">
                             Nosso propósito social é conectar pessoas que buscam um amor sem barreiras a ONGs responsáveis. 
                             Acreditamos que uma deficiência não define a capacidade de um animal de dar e receber carinho. 
@@ -2217,7 +2293,7 @@ class PetMatchApp {
                                 </p>
                             </div>
                         </div>
-                        
+
                         <div class="ong-card">
                             <div class="ong-icon" style="background: linear-gradient(135deg, var(--primary-pink), var(--primary-yellow));">
                                 <i class="fas fa-heart"></i>
@@ -2280,11 +2356,14 @@ class PetMatchApp {
         const favoritePets = APP_DATA.pets.filter(pet => 
             this.state.favorites.includes(pet.id)
         );
-        
+
+        // Link corrigido
+        const adotarLink = './adotar.html';
+
         return `
             <div class="w-full animate-in">
                 <h2 class="title mb-8">Meus Favoritos</h2>
-                
+
                 ${favoritePets.length === 0 ? `
                     <div class="empty-state">
                         <div class="empty-state-icon">
@@ -2292,7 +2371,7 @@ class PetMatchApp {
                         </div>
                         <h3 class="text-xl font-bold mb-2">Nenhum pet favoritado</h3>
                         <p class="text-gray-500">Adicione pets aos seus favoritos clicando no ícone de coração.</p>
-                        <a href="/adotar" class="btn btn-primary mt-4" data-route>
+                        <a href="${adotarLink}" class="btn btn-primary mt-4">
                             <i class="fas fa-paw"></i> Explorar Pets
                         </a>
                     </div>
@@ -2300,9 +2379,9 @@ class PetMatchApp {
                     <div class="pets-grid">
                         ${favoritePets.map((pet, index) => this.renderPetCard(pet, index)).join('')}
                     </div>
-                    
+
                     <div class="text-center mt-8">
-                        <a href="/adotar" class="btn btn-outline" data-route>
+                        <a href="${adotarLink}" class="btn btn-outline">
                             <i class="fas fa-plus"></i> Ver Mais Pets
                         </a>
                     </div>
