@@ -2,47 +2,28 @@
 const API_CONFIG = {
     publicKey: 'public_LqoBYnTCSQBYNGdC',
     secretKey: 'secret_DAFSKHsF9yt3FjSM',
-    // Substitua pela URL real da sua API quando tiver
     baseURL: 'https://api.petmatch.com/v1', 
     jwtPublicKey: `-----BEGIN PUBLIC KEY-----
 MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqUIZJ5HrqPfrR+b1nwRb
 nVOzMzJX5LFdJJrU6sVRUnzRnBXP+ikdEUS8UpmVbRJDhXxMlRqwQgPCtsjt914k
 skuhAs5/78dk/OfCnRIT8BMMDumyEt52+6S2+kozSf5spf2vrPZCiADXXMUvpevo
-ulNtkUIYt1I4sMpw9/lw3l1RZkQ7HRwhVtk2WuhrSNghB6VAVsCm8gBMMlPbLgZGQ
-P0OcuEQaOQ5o7CbEiq5POx+EYwFL9guJ5thEKQgmn6ZdrcmV8UQ+n1KrB0h5CMwm
+ulNtkUIYt1I4sMpw9/lw3l1RZkQ7HRwhVtk2WuhrSNghB6VAVsCm8gBMMlPbLgZG
+QP0OcuEQaOQ5o7CbEiq5POx+EYwFL9guJ5thEKQgmn6ZdrcmV8UQ+n1KrB0h5CMwm
 9XUu1zoaLr8k3Z1M7Lsc+mmqt9LYpNyzyFFGxqn/5u3hsV9mpLhTUpOFLzWtKd5VV
 jQIDAQAB
 -----END PUBLIC KEY-----`
 };
 
-// Serviço de Autenticação
+// Serviço de Autenticação (mantido original)
 class AuthService {
     constructor() {
         this.token = localStorage.getItem('petmatch_token');
         this.user = JSON.parse(localStorage.getItem('petmatch_user') || 'null');
     }
 
-    // Login com as credenciais e chaves da API
     async login(email, password, nome = null) {
         try {
-            // Simulação da chamada real à API (substitua pela URL real quando disponível)
-            // const response = await fetch(`${API_CONFIG.baseURL}/auth/login`, {
-            //     method: 'POST',
-            //     headers: {
-            //         'Content-Type': 'application/json',
-            //         'X-Public-Key': API_CONFIG.publicKey,
-            //         'X-Secret-Key': API_CONFIG.secretKey
-            //     },
-            //     body: JSON.stringify({
-            //         email,
-            //         password,
-            //         public_key: API_CONFIG.publicKey
-            //     })
-            // });
-
-            // Simulação temporária até integrar com backend real
             await this.simulateAPICall(email, password, nome);
-            
             return { success: true };
         } catch (error) {
             console.error('Erro de autenticação:', error);
@@ -50,11 +31,9 @@ class AuthService {
         }
     }
 
-    // Simulação de chamada API (remover quando integrar backend real)
     async simulateAPICall(email, password, nome) {
         return new Promise((resolve, reject) => {
             setTimeout(() => {
-                // Validação básica
                 if (!email || !password) {
                     reject(new Error('Email e senha são obrigatórios'));
                     return;
@@ -65,13 +44,12 @@ class AuthService {
                     return;
                 }
 
-                // Cria token JWT simulado (em produção, virá do servidor)
                 const payload = {
                     email: email,
                     nome: nome || email.split('@')[0],
                     public_key: API_CONFIG.publicKey,
                     iat: Date.now(),
-                    exp: Date.now() + (24 * 60 * 60 * 1000) // 24 horas
+                    exp: Date.now() + (24 * 60 * 60 * 1000)
                 };
                 
                 const token = btoa(JSON.stringify(payload));
@@ -83,25 +61,12 @@ class AuthService {
 
                 this.setSession(token, userData);
                 resolve({ token, user: userData });
-            }, 1000); // Simula latência da rede
+            }, 1000);
         });
     }
 
-    // Cadastro de novo usuário
     async register(nome, email, password) {
         try {
-            // Aqui faria a chamada real para a API de registro
-            // const response = await fetch(`${API_CONFIG.baseURL}/auth/register`, {
-            //     method: 'POST',
-            //     headers: {
-            //         'Content-Type': 'application/json',
-            //         'X-Public-Key': API_CONFIG.publicKey,
-            //         'X-Secret-Key': API_CONFIG.secretKey
-            //     },
-            //     body: JSON.stringify({ nome, email, cpf, password })
-            // });
-
-            // Simulação
             return await this.simulateAPICall(email, password, nome);
         } catch (error) {
             return { success: false, error: error.message };
@@ -127,7 +92,6 @@ class AuthService {
         if (!this.token) return false;
         
         try {
-            // Verifica se token não expirou
             const payload = JSON.parse(atob(this.token));
             return payload.exp > Date.now();
         } catch {
@@ -148,36 +112,304 @@ class AuthService {
     }
 }
 
-// Instância global do serviço de auth
-const authService = new AuthService();
+// ===== NOTIFICATION SERVICE =====
+class NotificationService {
+    constructor() {
+        this.notifications = JSON.parse(localStorage.getItem('petmatch_notifications')) || [];
+        this.initializeDefaultNotifications();
+    }
 
-// Dados da aplicação
-let APP_DATA = {
-    pets: [],
-    ongs: [],
-    fundadores: []
-};
-
-// Verificar autenticação antes de carregar dados
-async function loadAppData() {
-    try {
-        // Se estiver em rota protegida e não estiver autenticado, redireciona
-        const protectedRoutes = ['/home', '/adotar', '/locais', '/sobre', '/favoritos'];
-        const currentPath = window.location.pathname;
-        
-        if (protectedRoutes.includes(currentPath) && !authService.isAuthenticated()) {
-            window.history.pushState({}, '', '/');
+    initializeDefaultNotifications() {
+        if (this.notifications.length === 0) {
+            this.notifications = [
+                {
+                    id: Date.now(),
+                    title: 'Bem-vindo ao PetMatch!',
+                    text: 'Comece sua jornada de adoção responsável.',
+                    type: 'info',
+                    time: 'Agora',
+                    read: false,
+                    icon: 'fa-heart'
+                },
+                {
+                    id: Date.now() - 1000,
+                    title: 'Novo pet disponível',
+                    text: 'Bento acabou de ser cadastrado e está esperando por você!',
+                    type: 'success',
+                    time: '2 min',
+                    read: false,
+                    icon: 'fa-paw'
+                }
+            ];
+            this.saveNotifications();
         }
+    }
 
-        const response = await fetch('data.json');
-        APP_DATA = await response.json();
-    } catch (error) {
-        console.error('Erro ao carregar dados:', error);
-        APP_DATA = { pets: [], ongs: [], fundadores: [] };
+    saveNotifications() {
+        localStorage.setItem('petmatch_notifications', JSON.stringify(this.notifications));
+    }
+
+    add(title, text, type = 'info', icon = 'fa-bell') {
+        const notification = {
+            id: Date.now(),
+            title,
+            text,
+            type,
+            time: 'Agora',
+            read: false,
+            icon
+        };
+        this.notifications.unshift(notification);
+        if (this.notifications.length > 20) this.notifications.pop();
+        this.saveNotifications();
+        this.updateBadge();
+        return notification;
+    }
+
+    markAsRead(id) {
+        const notif = this.notifications.find(n => n.id === id);
+        if (notif) {
+            notif.read = true;
+            this.saveNotifications();
+            this.updateBadge();
+        }
+    }
+
+    markAllAsRead() {
+        this.notifications.forEach(n => n.read = true);
+        this.saveNotifications();
+        this.updateBadge();
+    }
+
+    getUnreadCount() {
+        return this.notifications.filter(n => !n.read).length;
+    }
+
+    updateBadge() {
+        const badge = document.getElementById('notification-badge');
+        if (badge) {
+            const count = this.getUnreadCount();
+            badge.textContent = count;
+            badge.style.display = count > 0 ? 'flex' : 'none';
+        }
+    }
+
+    renderDropdown() {
+        const unreadCount = this.getUnreadCount();
+        
+        return `
+            <div class="notification-header">
+                <strong>Notificações</strong>
+                ${unreadCount > 0 ? `<button onclick="notificationService.markAllAsRead(); app.render();" style="background:none;border:none;color:var(--primary-blue);cursor:pointer;font-size:0.875rem;">Marcar todas como lidas</button>` : ''}
+            </div>
+            <ul class="notification-list">
+                ${this.notifications.length === 0 ? '<li style="padding:2rem;text-align:center;color:var(--neutral-gray-500);">Nenhuma notificação</li>' : ''}
+                ${this.notifications.map(n => `
+                    <li class="notification-item ${n.read ? '' : 'unread'}" onclick="notificationService.markAsRead(${n.id}); app.render();">
+                        <div class="notification-icon ${n.type}">
+                            <i class="fas ${n.icon || 'fa-bell'}"></i>
+                        </div>
+                        <div class="notification-content">
+                            <div class="notification-title">${n.title}</div>
+                            <div class="notification-text">${n.text}</div>
+                            <div class="notification-time">${n.time}</div>
+                        </div>
+                    </li>
+                `).join('')}
+            </ul>
+        `;
     }
 }
 
-// Resto das utilidades de animação...
+// ===== CHAT SERVICE =====
+class ChatService {
+    constructor() {
+        this.messages = JSON.parse(localStorage.getItem('petmatch_chat_messages')) || {};
+        this.currentOng = null;
+        this.simulatedResponses = {
+            'ONG Patinhas': ['Olá! Como posso ajudar?', 'Temos muitos pets esperando por um lar!', 'Gostaria de agendar uma visita?', 'Obrigado pelo interesse em adotar!'],
+            'Resgate Animal': ['Oi! Interessado em adotar?', 'Podemos marcar um horário para você conhecer nossos pets.', 'Todos são muito carinhosos!', 'Tem alguma preferência de porte?'],
+            'Anjos de Patas': ['Olá! Seja bem-vindo!', 'Temos vários pets especiais.', 'Quando você pode vir nos visitar?', 'Vamos adorar conhecer você!'],
+            'ONG Patinhas Carentes': ['Oi!', 'Adoção responsável é nosso lema.', 'Podemos conversar sobre qual pet tem interesse?']
+        };
+    }
+
+    loadMessages(ongName) {
+        return this.messages[ongName] || [];
+    }
+
+    saveMessage(ongName, message, isUser = true) {
+        if (!this.messages[ongName]) this.messages[ongName] = [];
+        this.messages[ongName].push({
+            text: message,
+            isUser,
+            time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+            timestamp: Date.now()
+        });
+        localStorage.setItem('petmatch_chat_messages', JSON.stringify(this.messages));
+        this.updateBadge();
+    }
+
+    updateBadge() {
+        const total = Object.values(this.messages).reduce((acc, msgs) => {
+            return acc + msgs.filter(m => !m.isUser).length;
+        }, 0);
+        const badge = document.getElementById('chat-badge');
+        if (badge) {
+            badge.textContent = total;
+            badge.classList.toggle('hidden', total === 0);
+        }
+    }
+
+    startChat(ongName) {
+        this.currentOng = ongName;
+        const container = document.getElementById('chat-container');
+        const messagesDiv = document.getElementById('chat-messages');
+        const input = document.getElementById('chat-input');
+        const sendBtn = document.getElementById('chat-send');
+        const headerName = document.getElementById('chat-ong-name');
+        
+        headerName.textContent = ongName;
+        container.classList.remove('hidden');
+        
+        // Enable inputs
+        input.disabled = false;
+        sendBtn.disabled = false;
+        input.focus();
+        
+        // Load messages
+        const messages = this.loadMessages(ongName);
+        if (messages.length === 0) {
+            // Send welcome message
+            setTimeout(() => {
+                const welcome = this.simulatedResponses[ongName] ? this.simulatedResponses[ongName][0] : 'Olá! Como posso ajudar?';
+                this.saveMessage(ongName, welcome, false);
+                this.renderMessages(ongName);
+            }, 500);
+        }
+        
+        this.renderMessages(ongName);
+        this.updateBadge();
+    }
+
+    renderMessages(ongName) {
+        const messagesDiv = document.getElementById('chat-messages');
+        const messages = this.loadMessages(ongName);
+        
+        messagesDiv.innerHTML = messages.map(m => `
+            <div class="message ${m.isUser ? 'sent' : 'received'}">
+                <div>${m.text}</div>
+                <div class="message-time">${m.time}</div>
+            </div>
+        `).join('');
+        
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    sendMessage(text) {
+        if (!this.currentOng || !text.trim()) return;
+        
+        this.saveMessage(this.currentOng, text, true);
+        this.renderMessages(this.currentOng);
+        
+        // Simulate response
+        setTimeout(() => {
+            const responses = this.simulatedResponses[this.currentOng] || ['Entendi!', 'Muito interessante!', 'Podemos agendar uma visita se quiser.'];
+            const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+            this.saveMessage(this.currentOng, randomResponse, false);
+            this.renderMessages(this.currentOng);
+            
+            // Show notification if chat closed
+            const container = document.getElementById('chat-container');
+            if (container.classList.contains('hidden')) {
+                notificationService.add('Nova mensagem', `Mensagem de ${this.currentOng}`, 'info', 'fa-comments');
+            }
+        }, 1500 + Math.random() * 1000);
+    }
+
+    toggle() {
+        const container = document.getElementById('chat-container');
+        container.classList.toggle('hidden');
+        if (!container.classList.contains('hidden') && this.currentOng) {
+            this.renderMessages(this.currentOng);
+            document.getElementById('chat-input').focus();
+        }
+    }
+
+    close() {
+        document.getElementById('chat-container').classList.add('hidden');
+    }
+}
+
+// ===== GEOLOCATION SERVICE =====
+class GeolocationService {
+    constructor() {
+        this.userLocation = null;
+        this.loading = false;
+    }
+
+    async getLocation() {
+        return new Promise((resolve, reject) => {
+            if (!navigator.geolocation) {
+                reject(new Error('Geolocalização não suportada'));
+                return;
+            }
+
+            this.loading = true;
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    this.userLocation = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude
+                    };
+                    this.loading = false;
+                    localStorage.setItem('petmatch_location', JSON.stringify(this.userLocation));
+                    resolve(this.userLocation);
+                },
+                (error) => {
+                    this.loading = false;
+                    reject(error);
+                },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            );
+        });
+    }
+
+    loadStoredLocation() {
+        const stored = localStorage.getItem('petmatch_location');
+        if (stored) {
+            this.userLocation = JSON.parse(stored);
+        }
+    }
+
+    calculateDistance(lat1, lng1, lat2, lng2) {
+        const R = 6371; // Radius of the earth in km
+        const dLat = this.deg2rad(lat2 - lat1);
+        const dLng = this.deg2rad(lng2 - lng1);
+        const a = 
+            Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.cos(this.deg2rad(lat1)) * Math.cos(this.deg2rad(lat2)) * 
+            Math.sin(dLng/2) * Math.sin(dLng/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        return R * c; // Distance in km
+    }
+
+    deg2rad(deg) {
+        return deg * (Math.PI/180);
+    }
+
+    getDistanceToOng(ong) {
+        if (!this.userLocation || !ong.lat || !ong.lng) return null;
+        return this.calculateDistance(
+            this.userLocation.lat,
+            this.userLocation.lng,
+            ong.lat,
+            ong.lng
+        ).toFixed(1);
+    }
+}
+
+// ===== UTILITIES (mantidas originais) =====
 const AnimationUtils = {
     observeElements: (selector, animationClass = 'animate-in') => {
         const observer = new IntersectionObserver((entries) => {
@@ -275,13 +507,12 @@ const AnimationUtils = {
             let velX = vx;
             let velY = vy;
             let rotation = 0;
-            let rotationSpeed = (Math.random() - 0.5) * 20;
             
             const animate = () => {
                 velY += 5;
                 posX += velX * 0.016;
                 posY += velY * 0.016;
-                rotation += rotationSpeed;
+                rotation += 5;
                 
                 confetti.style.left = posX + 'px';
                 confetti.style.top = posY + 'px';
@@ -300,21 +531,94 @@ const AnimationUtils = {
     }
 };
 
-// Estilos adicionais para ripple
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes rippleEffect {
-        to { transform: scale(2); opacity: 0; }
-    }
-    @keyframes shake {
-        0%, 100% { transform: translateX(0); }
-        25% { transform: translateX(-5px); }
-        75% { transform: translateX(5px); }
-    }
-`;
-document.head.appendChild(style);
+// Toast notification helper
+function showToast(title, message, type = 'success') {
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    
+    const iconMap = {
+        success: 'fa-check-circle',
+        error: 'fa-exclamation-circle',
+        warning: 'fa-exclamation-triangle',
+        info: 'fa-info-circle'
+    };
+    
+    toast.innerHTML = `
+        <i class="fas ${iconMap[type]} toast-icon"></i>
+        <div class="toast-content">
+            <div class="toast-title">${title}</div>
+            <div class="toast-message">${message}</div>
+        </div>
+        <button class="toast-close" onclick="this.parentElement.remove()">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
+    
+    container.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(100%)';
+        setTimeout(() => toast.remove(), 300);
+    }, 5000);
+}
 
-// Classe principal do App
+// Instâncias globais
+const authService = new AuthService();
+const notificationService = new NotificationService();
+const chatService = new ChatService();
+const geoService = new GeolocationService();
+
+// Dados da aplicação
+let APP_DATA = {
+    pets: [],
+    ongs: [],
+    fundadores: []
+};
+
+// Verificar autenticação antes de carregar dados
+async function loadAppData() {
+    try {
+        const protectedRoutes = ['/home', '/adotar', '/locais', '/sobre', '/favoritos'];
+        const currentPath = window.location.pathname;
+        
+        if (protectedRoutes.includes(currentPath) && !authService.isAuthenticated()) {
+            window.history.pushState({}, '', '/');
+        }
+
+        const response = await fetch('data.json');
+        APP_DATA = await response.json();
+        
+        // Load geolocation if authenticated
+        if (authService.isAuthenticated()) {
+            geoService.loadStoredLocation();
+        }
+    } catch (error) {
+        console.error('Erro ao carregar dados:', error);
+        APP_DATA = { pets: [], ongs: [], fundadores: [] };
+    }
+}
+
+// Skeleton Loading Component
+function renderSkeletonGrid(count = 6) {
+    return `
+        <div class="skeleton-grid">
+            ${Array.from({ length: count }, (_, i) => `
+                <div class="skeleton-card" style="animation-delay: ${i * 0.1}s">
+                    <div class="skeleton skeleton-image"></div>
+                    <div class="skeleton-content">
+                        <div class="skeleton skeleton-title"></div>
+                        <div class="skeleton skeleton-text"></div>
+                        <div class="skeleton skeleton-text short"></div>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
+// Classe principal do App (revisada e expandida)
 class PetMatchApp {
     constructor() {
         this.currentPath = window.location.pathname || '/';
@@ -338,8 +642,12 @@ class PetMatchApp {
             petsPerPage: 6,
             isLoading: true,
             authError: null,
-            isAuthenticating: false
+            isAuthenticating: false,
+            showNotifications: false,
+            schedulePetId: null,
+            shareData: null
         };
+        this.map = null;
         this.init();
     }
 
@@ -348,31 +656,93 @@ class PetMatchApp {
         this.setupRouting();
         this.render();
         this.setupEventListeners();
-        this.setState({ 
-            pets: APP_DATA.pets,
-            filteredPets: APP_DATA.pets,
-            isLoading: false 
-        });
+        this.setupChatListeners();
         
-        setTimeout(() => this.initAnimations(), 100);
+        // Simulate loading with skeleton
+        setTimeout(() => {
+            this.setState({ 
+                pets: APP_DATA.pets,
+                filteredPets: APP_DATA.pets,
+                isLoading: false 
+            });
+            this.initAnimations();
+            notificationService.updateBadge();
+            chatService.updateBadge();
+            
+            // Request geolocation on first visit
+            if (authService.isAuthenticated() && !geoService.userLocation) {
+                this.requestGeolocation();
+            }
+        }, 800);
+    }
+
+    async requestGeolocation() {
+        try {
+            showToast('Localização', 'Obtendo sua localização para melhores resultados...', 'info');
+            await geoService.getLocation();
+            showToast('Sucesso', 'Localização obtida! Mostrando distâncias reais.', 'success');
+            if (this.currentPath === '/locais' || this.currentPath === '/adotar') {
+                this.render();
+            }
+        } catch (error) {
+            console.log('Geolocation denied or error:', error);
+        }
+    }
+
+    setupChatListeners() {
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('#chat-toggle')) {
+                chatService.toggle();
+            }
+            if (e.target.closest('#chat-close')) {
+                chatService.close();
+            }
+            if (e.target.closest('#chat-send')) {
+                const input = document.getElementById('chat-input');
+                const text = input.value.trim();
+                if (text) {
+                    chatService.sendMessage(text);
+                    input.value = '';
+                }
+            }
+            if (e.target.closest('.chat-ong-btn')) {
+                const ongId = parseInt(e.target.closest('.chat-ong-btn').dataset.ongId);
+                const ong = APP_DATA.ongs.find(o => o.id === ongId);
+                if (ong) {
+                    chatService.startChat(ong.nome);
+                }
+            }
+        });
+
+        document.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && e.target.id === 'chat-input') {
+                const text = e.target.value.trim();
+                if (text) {
+                    chatService.sendMessage(text);
+                    e.target.value = '';
+                }
+            }
+        });
     }
 
     initAnimations() {
-        AnimationUtils.observeElements('.pet-card', 'animate-in-scale');
-        AnimationUtils.observeElements('.info-card', 'animate-in');
-        AnimationUtils.observeElements('.ong-card', 'animate-slide');
-        AnimationUtils.observeElements('.founder-card', 'animate-in-scale');
-        
-        document.querySelectorAll('.btn').forEach(btn => {
-            AnimationUtils.addRippleEffect(btn);
-        });
-        
-        document.querySelectorAll('.stat-number').forEach(stat => {
-            const value = parseInt(stat.textContent);
-            if (!isNaN(value)) {
-                AnimationUtils.animateCounter(stat, value);
-            }
-        });
+        setTimeout(() => {
+            AnimationUtils.observeElements('.pet-card', 'animate-in-scale');
+            AnimationUtils.observeElements('.info-card', 'animate-in');
+            AnimationUtils.observeElements('.ong-card', 'animate-slide');
+            AnimationUtils.observeElements('.founder-card', 'animate-in-scale');
+            
+            document.querySelectorAll('.btn').forEach(btn => {
+                AnimationUtils.addRippleEffect(btn);
+            });
+            
+            document.querySelectorAll('.stat-number').forEach(stat => {
+                const value = parseInt(stat.textContent);
+                if (!isNaN(value)) {
+                    AnimationUtils.animateCounter(stat, value);
+                }
+            });
+        }, 100);
     }
 
     setupRouting() {
@@ -414,6 +784,9 @@ class PetMatchApp {
         
         this.render();
         setTimeout(() => this.initAnimations(), 100);
+        
+        // Close notifications dropdown on navigation
+        this.state.showNotifications = false;
     }
 
     setState(newState) {
@@ -430,9 +803,13 @@ class PetMatchApp {
             if (e.target.id === 'contact-form') {
                 this.handleContactSubmit(e);
             }
+            if (e.target.id === 'schedule-form') {
+                this.handleScheduleSubmit(e);
+            }
         });
 
         document.addEventListener('click', (e) => {
+            // Auth toggle
             if (e.target.closest('#toggle-auth')) {
                 this.setState({ 
                     isLogin: !this.state.isLogin, 
@@ -440,14 +817,17 @@ class PetMatchApp {
                 });
             }
 
+            // Search pets
             if (e.target.closest('#search-pets')) {
                 this.filterPets();
             }
 
+            // Theme toggle
             if (e.target.closest('#theme-toggle')) {
                 this.toggleDarkMode();
             }
 
+            // Favorite
             if (e.target.closest('.favorite-btn')) {
                 const btn = e.target.closest('.favorite-btn');
                 const petId = parseInt(btn.dataset.petId);
@@ -456,34 +836,52 @@ class PetMatchApp {
                 this.toggleFavorite(petId);
             }
 
+            // Pet detail
             if (e.target.closest('.pet-detail-btn')) {
                 const petId = parseInt(e.target.closest('.pet-detail-btn').dataset.petId);
                 this.showPetModal(petId);
             }
 
-            if (e.target.closest('.modal-close') || e.target.closest('.modal')) {
-                if (e.target.classList.contains('modal') || e.target.closest('.modal-close')) {
-                    this.closeModal();
-                }
+            // Modal close
+            if (e.target.closest('.modal-close') || (e.target.classList.contains('modal') && !e.target.closest('.modal-content'))) {
+                this.closeModal();
             }
 
+            // Filter modal
             if (e.target.closest('#open-filters')) {
                 this.showFilterModal();
             }
 
+            // Apply filters
             if (e.target.closest('#apply-filters')) {
                 this.applyFilters();
             }
 
+            // Clear filters
             if (e.target.closest('#clear-filters')) {
                 this.clearFilters();
             }
 
+            // Contact btn
             if (e.target.closest('.contact-btn')) {
                 const ongId = parseInt(e.target.closest('.contact-btn').dataset.ongId);
                 this.showContactModal(ongId);
             }
 
+            // Schedule visit
+            if (e.target.closest('.schedule-btn')) {
+                const petId = parseInt(e.target.closest('.schedule-btn').dataset.petId);
+                this.showScheduleModal(petId);
+            }
+
+            // Share pet
+            if (e.target.closest('.share-btn')) {
+                const btn = e.target.closest('.share-btn');
+                const petId = btn.dataset.petId;
+                this.sharePet(petId);
+            }
+
+            // Pagination
             if (e.target.closest('.pagination-btn')) {
                 const btn = e.target.closest('.pagination-btn');
                 if (!btn.disabled) {
@@ -492,11 +890,31 @@ class PetMatchApp {
                 }
             }
 
+            // Logout
             if (e.target.closest('#logout-btn')) {
                 authService.logout();
             }
+
+            // Notification toggle
+            if (e.target.closest('#notification-btn')) {
+                e.stopPropagation();
+                this.state.showNotifications = !this.state.showNotifications;
+                this.render();
+            }
+
+            // Close notifications when clicking outside
+            if (!e.target.closest('.notification-container') && this.state.showNotifications) {
+                this.state.showNotifications = false;
+                this.render();
+            }
+
+            // Map controls
+            if (e.target.closest('#map-locate-btn')) {
+                this.requestGeolocation();
+            }
         });
 
+        // Input handlers
         document.addEventListener('input', (e) => {
             if (e.target.id === 'cep-input') {
                 this.state.cep = e.target.value;
@@ -524,6 +942,9 @@ class PetMatchApp {
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 this.closeModal();
+                chatService.close();
+                this.state.showNotifications = false;
+                this.render();
             }
         });
     }
@@ -541,7 +962,7 @@ class PetMatchApp {
         if (this.state.isLogin) {
             result = await authService.login(email, password);
         } else {
-            result = await authService.register(nome, email, null, password);
+            result = await authService.register(nome, email, password);
         }
         
         if (result.success) {
@@ -560,7 +981,6 @@ class PetMatchApp {
                 isAuthenticating: false 
             });
             
-            // Shake animation no formulário
             const card = document.querySelector('.card');
             if (card) {
                 card.style.animation = 'shake 0.5s ease';
@@ -589,8 +1009,52 @@ class PetMatchApp {
         submitBtn.style.background = 'linear-gradient(135deg, #10B981, #059669)';
         
         setTimeout(() => {
-            alert('Mensagem enviada com sucesso! Entraremos em contato em breve.');
+            showToast('Mensagem Enviada!', 'A ONG entrará em contato em breve.', 'success');
             this.closeModal();
+        }, 500);
+    }
+
+    async handleScheduleSubmit(e) {
+        e.preventDefault();
+        const form = e.target;
+        const submitBtn = form.querySelector('button[type="submit"]');
+        
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processando...';
+        submitBtn.disabled = true;
+        
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        const pet = APP_DATA.pets.find(p => p.id === this.state.schedulePetId);
+        const date = document.getElementById('schedule-date').value;
+        const time = document.getElementById('schedule-time').value;
+        
+        // Save to localStorage (simulated)
+        const schedules = JSON.parse(localStorage.getItem('petmatch_schedules')) || [];
+        schedules.push({
+            petId: this.state.schedulePetId,
+            petName: pet?.nome,
+            ong: pet?.ong,
+            date,
+            time,
+            createdAt: new Date().toISOString()
+        });
+        localStorage.setItem('petmatch_schedules', JSON.stringify(schedules));
+        
+        submitBtn.innerHTML = '<i class="fas fa-check"></i> Agendado!';
+        submitBtn.style.background = 'linear-gradient(135deg, #10B981, #059669)';
+        
+        // Add notification
+        notificationService.add(
+            'Visita Agendada!',
+            `Sua visita para conhecer ${pet?.nome} foi agendada para ${date} às ${time}`,
+            'success',
+            'fa-calendar-check'
+        );
+        
+        setTimeout(() => {
+            showToast('Visita Agendada!', `Você agendou uma visita para ${date} às ${time}`, 'success');
+            this.closeModal();
+            this.setState({ schedulePetId: null });
         }, 500);
     }
 
@@ -618,8 +1082,10 @@ class PetMatchApp {
         
         if (index > -1) {
             favorites.splice(index, 1);
+            showToast('Removido', 'Pet removido dos favoritos', 'info');
         } else {
             favorites.push(petId);
+            showToast('Adicionado', 'Pet adicionado aos favoritos!', 'success');
         }
         
         this.setState({ favorites });
@@ -727,7 +1193,12 @@ class PetMatchApp {
                 <div class="pet-detail-info">
                     <div class="flex justify-between items-center">
                         <h3 class="pet-name">${pet.nome}</h3>
-                        <span class="pet-tag">${pet.deficiencia}</span>
+                        <div style="display:flex;align-items:center;">
+                            <span class="pet-tag">${pet.deficiencia}</span>
+                            <button class="share-btn" data-pet-id="${pet.id}" aria-label="Compartilhar">
+                                <i class="fas fa-share-alt"></i>
+                            </button>
+                        </div>
                     </div>
                     
                     <div class="pet-detail-meta">
@@ -744,11 +1215,21 @@ class PetMatchApp {
                         <i class="fas fa-hands-helping"></i> ${pet.ong}
                     </p>
                     
+                    ${geoService.userLocation ? `
+                        <div class="distance-badge mb-4">
+                            <i class="fas fa-location-arrow"></i> 
+                            ${geoService.getDistanceToOng(APP_DATA.ongs.find(o => o.nome === pet.ong)) || '~'} km de distância
+                        </div>
+                    ` : ''}
+                    
                     <p class="pet-detail-description">${pet.descricao}</p>
                     
-                    <div class="flex gap-4 mt-6">
-                        <button class="btn btn-primary flex-1 adopt-btn">
-                            <i class="fas fa-heart"></i> Adotar
+                    <div class="flex gap-4 mt-6 flex-wrap">
+                        <button class="btn btn-primary flex-1 adopt-btn" onclick="chatService.startChat('${pet.ong}'); app.closeModal();">
+                            <i class="fas fa-comment"></i> Conversar
+                        </button>
+                        <button class="btn btn-secondary schedule-btn flex-1" data-pet-id="${petId}">
+                            <i class="fas fa-calendar"></i> Agendar Visita
                         </button>
                         <button class="btn btn-outline flex-1 contact-btn" data-ong-id="${APP_DATA.ongs.find(o => o.nome === pet.ong)?.id || ''}">
                             <i class="fas fa-phone"></i> Contato
@@ -761,17 +1242,18 @@ class PetMatchApp {
         const adoptBtn = modalBody.querySelector('.adopt-btn');
         if (adoptBtn) {
             adoptBtn.addEventListener('click', (e) => {
-                const rect = adoptBtn.getBoundingClientRect();
-                AnimationUtils.createConfetti(rect.left + rect.width/2, rect.top + rect.height/2);
-                
-                adoptBtn.innerHTML = '<i class="fas fa-check"></i> Solicitação Enviada!';
-                adoptBtn.style.background = 'linear-gradient(135deg, #10B981, #059669)';
-                
-                setTimeout(() => {
-                    alert(`Sua solicitação de adoção para ${pet.nome} foi enviada! A ONG entrará em contato em breve.`);
-                }, 500);
+                if (!e.target.closest('.adopt-btn').innerHTML.includes('Conversar')) {
+                    const rect = adoptBtn.getBoundingClientRect();
+                    AnimationUtils.createConfetti(rect.left + rect.width/2, rect.top + rect.height/2);
+                    
+                    adoptBtn.innerHTML = '<i class="fas fa-check"></i> Solicitação Enviada!';
+                    adoptBtn.style.background = 'linear-gradient(135deg, #10B981, #059669)';
+                    
+                    setTimeout(() => {
+                        alert(`Sua solicitação de adoção para ${pet.nome} foi enviada! A ONG entrará em contato em breve.`);
+                    }, 500);
+                }
             });
-            AnimationUtils.addRippleEffect(adoptBtn);
         }
         
         modal.classList.add('active');
@@ -784,6 +1266,51 @@ class PetMatchApp {
                 content.style.opacity = '1';
             }
         }, 10);
+    }
+
+    showScheduleModal(petId) {
+        const pet = APP_DATA.pets.find(p => p.id === petId);
+        if (!pet) return;
+        
+        this.setState({ schedulePetId: petId });
+        
+        // Set min date to tomorrow
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const dateInput = document.getElementById('schedule-date');
+        if (dateInput) {
+            dateInput.min = tomorrow.toISOString().split('T')[0];
+        }
+        
+        document.getElementById('schedule-pet-name').textContent = pet.nome;
+        document.getElementById('schedule-ong-name').textContent = pet.ong;
+        
+        const modal = document.getElementById('schedule-modal');
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    async sharePet(petId) {
+        const pet = APP_DATA.pets.find(p => p.id === parseInt(petId));
+        if (!pet) return;
+        
+        const shareData = {
+            title: `Adote ${pet.nome} - PetMatch`,
+            text: `Conheça ${pet.nome}, um pet ${pet.deficiencia.toLowerCase()} de ${pet.idade} esperando por um lar!`,
+            url: window.location.href
+        };
+        
+        try {
+            if (navigator.share) {
+                await navigator.share(shareData);
+                showToast('Compartilhado!', 'Obrigado por compartilhar!', 'success');
+            } else {
+                await navigator.clipboard.writeText(`${shareData.title}\n${shareData.text}\n${shareData.url}`);
+                showToast('Copiado!', 'Link copiado para a área de transferência', 'success');
+            }
+        } catch (err) {
+            console.error('Error sharing:', err);
+        }
     }
 
     showFilterModal() {
@@ -873,6 +1400,7 @@ class PetMatchApp {
         const modalBody = document.getElementById('contact-modal-body');
         
         const user = authService.getUser();
+        const distance = geoService.getDistanceToOng(ong);
         
         modalBody.innerHTML = `
             <h3 class="subtitle mb-4">Contato: ${ong.nome}</h3>
@@ -881,7 +1409,12 @@ class PetMatchApp {
                 <p class="mb-2"><i class="fas fa-map-marker-alt text-primary-orange"></i> <strong>Endereço:</strong> ${ong.endereco}</p>
                 <p class="mb-2"><i class="fas fa-phone text-primary-blue"></i> <strong>Telefone:</strong> ${ong.telefone}</p>
                 <p class="mb-2"><i class="fas fa-envelope text-primary-pink"></i> <strong>Email:</strong> ${ong.email}</p>
+                ${distance ? `<p class="mb-2"><i class="fas fa-route text-primary-orange"></i> <strong>Distância:</strong> ${distance} km da sua localização</p>` : ''}
             </div>
+            
+            <button class="btn btn-secondary w-full mb-4 chat-ong-btn" data-ong-id="${ong.id}">
+                <i class="fas fa-comments"></i> Iniciar Chat
+            </button>
             
             <form id="contact-form" class="space-y-4">
                 <div>
@@ -934,31 +1467,72 @@ class PetMatchApp {
 
     initMap() {
         const mapContainer = document.getElementById('map');
-        if (!mapContainer) return;
+        if (!mapContainer || this.map) return;
         
-        const map = L.map('map').setView([-23.550, -46.633], 12);
+        this.map = L.map('map').setView([-23.550, -46.633], 12);
         
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors'
-        }).addTo(map);
+        }).addTo(this.map);
         
+        // Add user location if available
+        if (geoService.userLocation) {
+            const userIcon = L.divIcon({
+                className: 'user-location-marker',
+                html: '<div style="background:#1893F8;border:3px solid white;border-radius:50%;width:20px;height:20px;box-shadow:0 0 0 4px rgba(24,147,248,0.3);"></div>',
+                iconSize: [20, 20],
+                iconAnchor: [10, 10]
+            });
+            
+            L.marker([geoService.userLocation.lat, geoService.userLocation.lng], { icon: userIcon })
+                .addTo(this.map)
+                .bindPopup('Você está aqui');
+            
+            // Add circle
+            L.circle([geoService.userLocation.lat, geoService.userLocation.lng], {
+                color: '#1893F8',
+                fillColor: '#1893F8',
+                fillOpacity: 0.1,
+                radius: 5000
+            }).addTo(this.map);
+        }
+        
+        // Add ONG markers
         APP_DATA.ongs.forEach((ong, index) => {
             if (ong.lat && ong.lng) {
                 setTimeout(() => {
-                    const marker = L.marker([ong.lat, ong.lng]).addTo(map);
-                    marker.bindPopup(`
-                        <div style="text-align: center; padding: 10px;">
+                    const distance = geoService.getDistanceToOng(ong);
+                    const popupContent = `
+                        <div style="text-align: center; padding: 10px; min-width: 200px;">
                             <strong style="font-size: 1.1rem; color: #1893F8;">${ong.nome}</strong><br>
                             <span style="color: #666;">${ong.endereco}</span><br>
+                            ${distance ? `<span style="color: #FF9C36; font-weight: bold;">${distance} km de distância</span><br>` : ''}
                             <span style="color: #999;">${ong.telefone}</span><br>
-                            <button class="contact-btn" data-ong-id="${ong.id}" style="margin-top: 10px; padding: 8px 16px; background: linear-gradient(135deg, #1893F8, #FF9C36); color: white; border: none; border-radius: 20px; cursor: pointer; font-weight: bold; transition: all 0.3s ease;">
-                                <i class="fas fa-phone"></i> Contatar
+                            <button class="chat-ong-btn" data-ong-id="${ong.id}" style="margin-top: 10px; margin-right: 5px; padding: 8px 16px; background: linear-gradient(135deg, #1893F8, #FF9C36); color: white; border: none; border-radius: 20px; cursor: pointer; font-weight: bold;">
+                                <i class="fas fa-comments"></i> Chat
+                            </button>
+                            <button class="contact-btn" data-ong-id="${ong.id}" style="margin-top: 10px; padding: 8px 16px; background: white; color: #1893F8; border: 2px solid #1893F8; border-radius: 20px; cursor: pointer; font-weight: bold;">
+                                <i class="fas fa-phone"></i> Ligação
                             </button>
                         </div>
-                    `);
+                    `;
+                    
+                    const marker = L.marker([ong.lat, ong.lng]).addTo(this.map);
+                    marker.bindPopup(popupContent);
                 }, index * 200);
             }
         });
+        
+        // Add locate button
+        const locateBtn = L.control({ position: 'topright' });
+        locateBtn.onAdd = () => {
+            const div = L.DomUtil.create('div', 'map-control-btn');
+            div.innerHTML = '<i class="fas fa-crosshairs"></i>';
+            div.title = 'Minha localização';
+            div.onclick = () => this.requestGeolocation();
+            return div;
+        };
+        locateBtn.addTo(this.map);
     }
 
     filterPets() {
@@ -1004,7 +1578,7 @@ class PetMatchApp {
             <div class="app-container ${isAuthPage ? 'auth-page' : ''}">
                 ${this.renderHeader()}
                 <main class="app-main">
-                    ${this.state.isLoading ? this.renderLoading() : this.renderContent()}
+                    ${this.state.isLoading ? this.renderSkeleton() : this.renderContent()}
                 </main>
                 ${!isAuthPage ? this.renderFooter() : ''}
             </div>
@@ -1018,11 +1592,33 @@ class PetMatchApp {
             setTimeout(() => this.initMap(), 100);
         }
         
+        // Update notification badge
+        setTimeout(() => notificationService.updateBadge(), 100);
+        
         setTimeout(() => {
             document.querySelectorAll('.btn').forEach(btn => {
                 AnimationUtils.addRippleEffect(btn);
             });
         }, 50);
+    }
+
+    renderSkeleton() {
+        if (this.currentPath === '/' || this.currentPath === '') {
+            return this.renderLoading();
+        }
+        return `
+            <div class="w-full animate-in">
+                ${this.currentPath === '/home' ? `
+                    <div class="hero-section animate-in mb-10">
+                        <div class="skeleton" style="width:200px;height:40px;margin-bottom:2rem;"></div>
+                        <div class="skeleton" style="width:100%;height:60px;margin-bottom:1rem;"></div>
+                        <div class="skeleton" style="width:60%;height:30px;margin-bottom:2rem;"></div>
+                    </div>
+                ` : ''}
+                <h2 class="subtitle mb-6">Carregando pets...</h2>
+                ${renderSkeletonGrid(6)}
+            </div>
+        `;
     }
 
     bindAdotarFilters() {
@@ -1119,6 +1715,18 @@ class PetMatchApp {
                         </nav>
                         
                         <div class="user-menu" style="display: flex; align-items: center; gap: 1rem; margin-left: 1rem;">
+                            <div class="notification-container">
+                                <button id="notification-btn" class="notification-btn">
+                                    <i class="fas fa-bell"></i>
+                                    <span id="notification-badge" class="notification-badge" style="display: ${notificationService.getUnreadCount() > 0 ? 'flex' : 'none'};">
+                                        ${notificationService.getUnreadCount()}
+                                    </span>
+                                </button>
+                                <div id="notification-dropdown" class="notification-dropdown ${this.state.showNotifications ? 'active' : ''}">
+                                    ${notificationService.renderDropdown()}
+                                </div>
+                            </div>
+
                             <span style="color: white; font-weight: 600; font-size: 0.9rem;">
                                 <i class="fas fa-user"></i> ${user?.nome || 'Usuário'}
                             </span>
@@ -1280,6 +1888,12 @@ class PetMatchApp {
                             Faça a diferença na vida de um animal especial hoje!
                         </p>
                         
+                        ${geoService.userLocation ? `
+                            <div style="background: rgba(255,255,255,0.2); padding: 1rem; border-radius: var(--radius-lg); margin-bottom: 1.5rem; text-align: center; color: #0b3c5d; font-weight: 600;">
+                                <i class="fas fa-map-marker-alt"></i> Localização ativa! Mostrando distâncias reais.
+                            </div>
+                        ` : ''}
+                        
                         <div class="flex gap-4 justify-center flex-wrap">
                             <a href="/adotar" class="btn btn-primary" data-route>
                                 <i class="fas fa-search"></i> Encontrar meu Pet
@@ -1370,6 +1984,8 @@ class PetMatchApp {
 
     renderPetCard(pet, index = 0) {
         const isFavorite = this.state.favorites.includes(pet.id);
+        const ong = APP_DATA.ongs.find(o => o.nome === pet.ong);
+        const distance = ong && geoService.userLocation ? geoService.getDistanceToOng(ong) : null;
         
         return `
             <div class="pet-card" style="animation-delay: ${index * 0.1}s;">
@@ -1391,15 +2007,20 @@ class PetMatchApp {
                     
                     <p class="text-gray-500 font-bold mb-2">
                         <i class="fas fa-map-marker-alt"></i> ${pet.cidade}
+                        ${distance ? `<span style="color: var(--primary-orange); margin-left: 5px;">(${distance} km)</span>` : ''}
                     </p>
                     <p class="text-gray-400 italic font-medium mb-4">
                         <i class="fas fa-hands-helping"></i> ${pet.ong}
                     </p>
                     
-                    <button class="btn btn-primary w-full pet-detail-btn" data-pet-id="${pet.id}">
-                        Conhecer ${pet.nome}
-                        <i class="fas fa-heart"></i>
-                    </button>
+                    <div class="flex gap-2">
+                        <button class="btn btn-primary flex-1 pet-detail-btn" data-pet-id="${pet.id}">
+                            Conhecer
+                        </button>
+                        <button class="btn btn-outline share-btn" data-pet-id="${pet.id}" style="padding: 0.5rem 1rem;">
+                            <i class="fas fa-share-alt"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
         `;
@@ -1524,29 +2145,36 @@ class PetMatchApp {
                     <h2 class="title">ONGs Parceiras</h2>
                     <p class="text-gray-600 text-center mb-8 max-w-2xl mx-auto">
                         Conheça nossas ONGs parceiras que cuidam com amor de pets com deficiência.
+                        ${geoService.userLocation ? '<br><span style="color: var(--primary-orange);"><i class="fas fa-location-arrow"></i> Mostrando distâncias da sua localização atual</span>' : ''}
                     </p>
-                    <div class="mb-8">
-                        <h3 class="subtitle mb-4">Localização das ONGs</h3>
+                    <div class="mb-8" style="position: relative;">
                         <div id="map" class="map-container"></div>
                     </div>
                     <div class="space-y-6">
-                        ${APP_DATA.ongs.map((ong, index) => `
-                            <div class="ong-card" style="animation-delay: ${index * 0.1}s;">
-                                <div class="flex items-center gap-5 flex-col md:flex-row">
-                                    <div class="ong-icon"><i class="fas fa-hands-helping"></i></div>
-                                    <div class="flex-1">
-                                        <h4 class="ong-name">${ong.nome}</h4>
-                                        <p class="text-gray-500 font-medium"><i class="fas fa-map-marker-alt"></i> ${ong.endereco}</p>
-                                        <p class="text-gray-400 text-sm"><i class="fas fa-phone"></i> ${ong.telefone}</p>
+                        ${APP_DATA.ongs.map((ong, index) => {
+                            const distance = geoService.getDistanceToOng(ong);
+                            return `
+                                <div class="ong-card" style="animation-delay: ${index * 0.1}s;">
+                                    <div class="flex items-center gap-5 flex-col md:flex-row">
+                                        <div class="ong-icon"><i class="fas fa-hands-helping"></i></div>
+                                        <div class="flex-1">
+                                            <h4 class="ong-name">${ong.nome}</h4>
+                                            <p class="text-gray-500 font-medium"><i class="fas fa-map-marker-alt"></i> ${ong.endereco}</p>
+                                            <p class="text-gray-400 text-sm"><i class="fas fa-phone"></i> ${ong.telefone}</p>
+                                            ${distance ? `<span class="distance-badge"><i class="fas fa-route"></i> ${distance} km de distância</span>` : ''}
+                                        </div>
+                                    </div>
+                                    <div class="flex gap-2 text-center md:text-right">
+                                        <button class="btn btn-secondary chat-ong-btn" data-ong-id="${ong.id}">
+                                            <i class="fas fa-comments"></i> Chat
+                                        </button>
+                                        <button class="btn btn-outline contact-btn" data-ong-id="${ong.id}">
+                                            <i class="fas fa-phone"></i> Contato
+                                        </button>
                                     </div>
                                 </div>
-                                <div class="text-center md:text-right">
-                                    <button class="btn btn-secondary contact-btn" data-ong-id="${ong.id}">
-                                        <i class="fas fa-phone"></i> Contato
-                                    </button>
-                                </div>
-                            </div>
-                        `).join('')}
+                            `;
+                        }).join('')}
                     </div>
                 </div>
             </div>`;
@@ -1686,5 +2314,19 @@ class PetMatchApp {
 
 // Inicializar aplicação
 document.addEventListener('DOMContentLoaded', () => {
-    new PetMatchApp();
+    window.app = new PetMatchApp();
 });
+
+// Add shake animation style
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes rippleEffect {
+        to { transform: scale(2); opacity: 0; }
+    }
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-5px); }
+        75% { transform: translateX(5px); }
+    }
+`;
+document.head.appendChild(style);
