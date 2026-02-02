@@ -9,7 +9,7 @@ PetMatch is a Single Page Application (SPA) prototype that facilitates the adopt
 Current Status: This is a functional prototype demonstrating core features and user flows.
 
 Core Purpose
-The application aims to:
+The application aims to -
 
 Make pets with disabilities more visible to potential adopters
 Simplify the adoption process through technology
